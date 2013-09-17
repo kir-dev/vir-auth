@@ -34,13 +34,55 @@
     <version>10.0.1</version>
     <packaging>jar</packaging>
 
+    <repositories>
+        <!-- ForgeRock Internal Project Repository -->
+        <repository>
+            <id>maven.forgerock.org</id>
+            <name>maven.forgerock.org-openam-dependencies</name>
+            <url>http://maven.forgerock.org/repo/openam-dependencies</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+
+        <repository>
+            <id>forgerock-snapshots-repo</id>
+            <name>ForgeRock Snapshot Repository</name>
+            <url>http://maven.forgerock.org/repo/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
     <dependencies>
-<!--        <dependency>
+        <dependency>
+            <groupId>org.forgerock.openam</groupId>
+            <artifactId>openam-shared</artifactId>
+            <version>11.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.forgerock.openam</groupId>
+            <artifactId>openam-core</artifactId>
+            <version>11.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <version></version>
+            <version>6.8.5</version>
             <scope>test</scope>
-        </dependency>-->
+        </dependency>
     </dependencies>
 
     <!-- Build -->
@@ -58,20 +100,17 @@
                             <classpathPrefix>lib/</classpathPrefix>
                         </manifest>
                         <manifestEntries>
-                            <Specification-Title>OpenAM Auth JDBC</Specification-Title>
+                            <Specification-Title>OpenAM VIR Auth JDBC</Specification-Title>
                             <Specification-Version>${project.version} - ${maven.build.timestamp}</Specification-Version>
-                            <Specification-Vendor>ForgeRock</Specification-Vendor>
-                            <Implementation-Title>OpenAM Auth JDBC</Implementation-Title>
+                            <Specification-Vendor>ForgeRock, Kir-Dev</Specification-Vendor>
+                            <Implementation-Title>OpenAM VIR Auth JDBC</Implementation-Title>
                             <Implementation-Version>${project.version} - ${maven.build.timestamp}</Implementation-Version>
-                            <Implementation-Vendor>ForgeRock</Implementation-Vendor>
+                            <Implementation-Vendor>ForgeRock, Kir-Dev</Implementation-Vendor>
                             <Built-By>${user.name}</Built-By>
                             <Build-Jdk>${java.version}</Build-Jdk>
                             <Build-Time>${maven.build.timestamp}</Build-Time>
                             <Version>${project.version}</Version>
                             <Create-On>${maven.build.timestamp}</Create-On>
-                            <SVN-Revision>R${svn-revision.revision}</SVN-Revision>
-                            <!-- TODO Add License to Manifest -->
-                            <License />
                         </manifestEntries>
                     </archive>
                 </configuration>

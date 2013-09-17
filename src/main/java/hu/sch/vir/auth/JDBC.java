@@ -30,7 +30,7 @@
  * Portions Copyrighted 2011 ForgeRock Inc
  * Portions Copyrighted 2012 Open Source Solution Technology Corporation
  */
-package com.sun.identity.authentication.modules.jdbc;
+package hu.sch.vir.auth;
 
 import com.sun.identity.shared.debug.Debug;
 import com.sun.identity.shared.datastruct.CollectionHelper;
@@ -38,11 +38,14 @@ import com.sun.identity.authentication.spi.AMLoginModule;
 import com.sun.identity.authentication.spi.AuthLoginException;
 import com.sun.identity.authentication.spi.InvalidPasswordException;
 import com.sun.identity.authentication.util.ISAuthConstants;
+import java.lang.reflect.Constructor;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSetMetaData;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 
@@ -59,12 +62,13 @@ public class JDBC extends AMLoginModule {
     private String userName;
     private String password;
     private String resultPassword;
+    private Map mapResult;
     private char[] passwordCharArray;
     private java.security.Principal userPrincipal = null;
     private String errorMsg = null;
     
-    private static final String amAuthJDBC = "amAuthJDBC";
-    private static Debug debug = Debug.getInstance(amAuthJDBC);
+    static final String amAuthVirJDBC = "amAuthVirJDBC";
+    private static Debug debug = Debug.getInstance(amAuthVirJDBC);
     private ResourceBundle bundle = null;
     
     private Map options;
@@ -121,10 +125,11 @@ public class JDBC extends AMLoginModule {
      * @param sharedState
      * @param options
      */
+    @Override
     public void init(Subject subject, Map sharedState, Map options) {
         debug.message("in initialize...");
         java.util.Locale locale  = getLoginLocale();
-        bundle = amCache.getResBundle(amAuthJDBC, locale);
+        bundle = amCache.getResBundle(amAuthVirJDBC, locale);
         
         if (debug.messageEnabled()) {
             debug.message("amAuthJDBC Authentication resource bundle locale="+
@@ -271,18 +276,19 @@ public class JDBC extends AMLoginModule {
      * @exception AuthLoginException upon any failure. login state should be 
      *            kept on exceptions for status check in auth chaining.
      */
+    @Override
     public int process(Callback[] callbacks, int state) 
         throws AuthLoginException {
         // return if this module is already done
         if (errorMsg != null) {
-            throw new AuthLoginException(amAuthJDBC, errorMsg, null);
+            throw new AuthLoginException(amAuthVirJDBC, errorMsg, null);
         }
         if (debug.messageEnabled()) {
             debug.message("State: " + state);
         }
         
         if (state != ISAuthConstants.LOGIN_START) {
-            throw new AuthLoginException(amAuthJDBC, "invalidState", null);
+            throw new AuthLoginException(amAuthVirJDBC, "invalidState", null);
         }
 
         if (callbacks != null && callbacks.length == 0) {
@@ -302,7 +308,7 @@ public class JDBC extends AMLoginModule {
             password = new String(passwordCharArray);
                 
             if (userName == null || userName.length() == 0) {
-                throw new AuthLoginException(amAuthJDBC, "noUserName", null);
+                throw new AuthLoginException(amAuthVirJDBC, "noUserName", null);
             }
         }
         
@@ -311,7 +317,7 @@ public class JDBC extends AMLoginModule {
         // Check if they'return being a bit malicious with their UID.
         // SQL attacks will be handled by prepared stmt escaping.
         if (userName.length() > MAX_NAME_LENGTH ) {
-            throw new AuthLoginException(amAuthJDBC, "userNameTooLong", null);
+            throw new AuthLoginException(amAuthVirJDBC, "userNameTooLong", null);
         } 
         Connection database = null;
         PreparedStatement thisStatement = null;
@@ -350,7 +356,7 @@ public class JDBC extends AMLoginModule {
             
             if (results == null) {
                 debug.message("returned null from executeQuery()");
-                throw new AuthLoginException(amAuthJDBC, "nullResult", null);
+                throw new AuthLoginException(amAuthVirJDBC, "nullResult", null);
             }
             
             //parse the results.  should only be one item in one row.
@@ -363,9 +369,17 @@ public class JDBC extends AMLoginModule {
                         debug.message("Too many results."+
                                 "UID should be a primary key");
                     }
-                    throw new AuthLoginException(amAuthJDBC, "multiEntry",null);
+                    throw new AuthLoginException(amAuthVirJDBC, "multiEntry",null);
                 }
                 resultPassword = results.getString(passwordColumn).trim();
+
+                ResultSetMetaData meta = results.getMetaData();
+                int cols = meta.getColumnCount();
+                mapResult = new HashMap();
+                for (int i = 1; i <= cols; ++i) {
+                    final String colName = meta.getColumnName(i);
+                    mapResult.put(colName, results.getObject(colName));
+                }
             } 
             if (index == 0) {
                 // no results
@@ -373,7 +387,7 @@ public class JDBC extends AMLoginModule {
                     debug.message("No results from your SQL query."+
                             "UID should be valid");
                 }
-                throw new AuthLoginException(amAuthJDBC, "nullResult", null);
+                throw new AuthLoginException(amAuthVirJDBC, "nullResult", null);
              }
         } catch (Throwable e) {
             if (getCredentialsFromSharedState && !isUseFirstPassEnabled()) {
@@ -417,9 +431,27 @@ public class JDBC extends AMLoginModule {
             
         if (!transform.equals(DEFAULT_TRANSFORM)) {
             try {
-                  JDBCPasswordSyntaxTransform syntaxTransform = 
-                    (JDBCPasswordSyntaxTransform)Class.forName(transform)
-                        .newInstance();
+                // Attempt to load the transforms constructor
+                // that accepts a JDBCTransformParams instance.
+                // If not found, use empty constructor.
+                JDBCPasswordSyntaxTransform syntaxTransform;
+                final Class classTransform = Class.forName(transform);
+                Constructor ctr = null;
+                try {
+                    ctr = classTransform.getConstructor(
+                        JDBCTransformParams.class);
+                } catch (Exception ignored) {
+                }
+                if (ctr != null) {
+                    final JDBCTransformParams transformParams =
+                        new JDBCTransformParams(options, mapResult);
+                    syntaxTransform = (JDBCPasswordSyntaxTransform)
+                        ctr.newInstance(new Object[]{ transformParams });
+                } else {
+                    syntaxTransform = (JDBCPasswordSyntaxTransform)
+                        classTransform.newInstance();
+                }
+
                 if (debug.messageEnabled()) {
                     debug.message("Got my Transform Object" + 
                             syntaxTransform.toString() );
@@ -443,7 +475,7 @@ public class JDBC extends AMLoginModule {
         } else {           
             debug.message("password not match. Auth failed.");
             setFailureID(userName);
-            throw new InvalidPasswordException(amAuthJDBC, "loginFailed",
+            throw new InvalidPasswordException(amAuthVirJDBC, "loginFailed",
                 null, userName, null);
         }
     }
@@ -453,6 +485,7 @@ public class JDBC extends AMLoginModule {
      *
      * @return Principal of the authenticated user.
      */
+    @Override
     public java.security.Principal getPrincipal() {
         if (userPrincipal != null) {
             return userPrincipal;
@@ -467,12 +500,14 @@ public class JDBC extends AMLoginModule {
     /**
      * Cleans up the login state.
      */
+    @Override
     public void destroyModuleState() {
         userTokenId = null;
         userPrincipal = null;
     }
 
-    public void nullifyUserdVars() {
+    @Override
+    public void nullifyUsedVars() {
         userName = null;
         password = null;
         resultPassword = null;
@@ -480,6 +515,7 @@ public class JDBC extends AMLoginModule {
         errorMsg = null;
         bundle = null;
         options = null;
+        mapResult = null;
         driver = null;
         connectionType = null;
         jndiName = null;

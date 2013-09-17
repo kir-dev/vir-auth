@@ -29,7 +29,7 @@
 /**
  * Portions Copyrighted [2011] [ForgeRock AS]
  */
-package  com.sun.identity.authentication.modules.jdbc;
+package  hu.sch.vir.auth;
 
 import java.security.Principal;
 

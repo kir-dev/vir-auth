@@ -27,7 +27,7 @@
  */
 
 
-package com.sun.identity.authentication.modules.jdbc;
+package hu.sch.vir.auth;
 
 import com.sun.identity.authentication.spi.AuthLoginException;
 
