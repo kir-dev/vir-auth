@@ -31,27 +31,23 @@ import java.security.NoSuchAlgorithmException;
 
 import com.sun.identity.authentication.spi.AuthLoginException;
 import com.sun.identity.shared.datastruct.CollectionHelper;
-import com.sun.identity.authentication.util.ISAuthConstants;
 import com.sun.identity.shared.debug.Debug;
 import org.apache.commons.codec.binary.Base64;
 
 /**
- * An implementation of the JDBC Password Syntax Transform that hashes input
+ * An implementation of the VirJDBC Password Syntax Transform that hashes input
  * using a MessageDigest-supported algorithm (SHA-256 by default). An optional
  * salt may be supplied.
  */
 public class HashTransform implements JDBCPasswordSyntaxTransform {
 
-    private static Debug debug = Debug.getInstance(JDBC.amAuthVirJDBC);
+    private static Debug debug = Debug.getInstance(VirJDBC.amAuthVirJDBC);
     //package protected fields so we can use them in our tests
-    static String SALTCOLUMN =
-            ISAuthConstants.AUTH_ATTR_PREFIX_NEW + "JDBCSaltColumn";
+    static String SALTCOLUMN = "VirJDBCSaltColumn";
     //
-    static String SALT_AFTER_PASSWORD =
-            ISAuthConstants.AUTH_ATTR_PREFIX_NEW + "JDBCSaltAfterPassword";
+    static String SALT_AFTER_PASSWORD = "VirJDBCSaltAfterPassword";
     //
-    static String ALGORITHM =
-            ISAuthConstants.AUTH_ATTR_PREFIX_NEW + "JDBCTransformHashAlgorithm";
+    static String ALGORITHM = "VirJDBCTransformHashAlgorithm";
     //
     static final String DEFAULT_ALGORITHM = "SHA-256";
     //
@@ -117,8 +113,7 @@ public class HashTransform implements JDBCPasswordSyntaxTransform {
             }
 
             return hash(algorithm, input, salt);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new AuthLoginException("Could not hash input", e);
         }
     }
@@ -162,7 +157,9 @@ public class HashTransform implements JDBCPasswordSyntaxTransform {
             bytes = digest.digest();
         }
 
-        return Base64.encodeBase64String(bytes);
+        debug.message("hash() method returning=" + Base64.encodeBase64String(bytes).trim());
+
+        return Base64.encodeBase64String(bytes).trim();
     }
 
     /**

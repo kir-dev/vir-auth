@@ -33,15 +33,15 @@
     PUBLIC "=//iPlanet//Service Management Services (SMS) 1.0 DTD//EN"
     "jar://com/sun/identity/sm/sms.dtd">
 <ServicesConfiguration>
-    <Service name="sunAMAuthVirJDBCService" version="1.0">
+    <Service name="iPlanetAMAuthVirJDBCService" version="1.0">
         <Schema
-            serviceHierarchy="/DSAMEConfig/authentication/sunAMAuthVirJDBCService"
+            serviceHierarchy="/DSAMEConfig/authentication/iPlanetAMAuthVirJDBCService"
             i18nFileName="amAuthVirJDBC"
-            revisionNumber="20"
-            i18nKey="sunAMAuthVirJDBCServiceDescription">
-            
+            revisionNumber="30"
+            i18nKey="amAuthVirJDBCServiceDescription">
+
             <Organization>
-                <AttributeSchema name="sunAMAuthVirJDBCConnectionType"
+                <AttributeSchema name="VirJDBCConnectionType"
                                  type="single_choice"
                                  syntax="string"
                                  i18nKey="a100">
@@ -53,7 +53,7 @@
                         <Value>JNDI</Value>
                     </DefaultValues>
                 </AttributeSchema>
-                <AttributeSchema name="sunAMAuthVirJDBCJndiName"
+                <AttributeSchema name="VirJDBCJndiName"
                                  type="single"
                                  syntax="string"
                                  i18nKey="a101">
@@ -61,31 +61,31 @@
                         <Value>java:comp/env/jdbc/sch</Value>
                     </DefaultValues>
                 </AttributeSchema>
-                <AttributeSchema name="sunAMAuthVirJDBCDriver"
+                <AttributeSchema name="VirJDBCDriver"
                                  type="single"
                                  syntax="string"
                                  i18nKey="a102">
                     <DefaultValues>
-                        <Value>com.mysql.jdbc.Driver</Value>
+                        <Value></Value>
                     </DefaultValues>
                 </AttributeSchema>
-                <AttributeSchema name="sunAMAuthVirJDBCUrl"
+                <AttributeSchema name="VirJDBCUrl"
                                  type="single"
                                  syntax="string"
                                  i18nKey="a103">
                     <DefaultValues>
-                        <Value>jdbc:mysql://127.0.0.1:3306/test</Value>
+                        <Value></Value>
                     </DefaultValues>
                 </AttributeSchema>
-                <AttributeSchema name="sunAMAuthVirJDBCDbuser"
+                <AttributeSchema name="VirJDBCDbuser"
                                  type="single"
                                  syntax="string"
                                  i18nKey="a104">
                     <DefaultValues>
-                        <Value>root</Value>
+                        <Value></Value>
                     </DefaultValues>
                 </AttributeSchema>
-                <AttributeSchema name="sunAMAuthVirJDBCPasswordColumn"
+                <AttributeSchema name="VirJDBCPasswordColumn"
                                  type="single"
                                  syntax="string"
                                  i18nKey="a106">
@@ -93,7 +93,7 @@
                         <Value>usr_password</Value>
                     </DefaultValues>
                 </AttributeSchema>
-                <AttributeSchema name="sunAMAuthVirJDBCSaltColumn"
+                <AttributeSchema name="VirJDBCSaltColumn"
                                  type="single"
                                  syntax="string"
                                  i18nKey="a110">
@@ -101,7 +101,7 @@
                         <Value>usr_salt</Value>
                     </DefaultValues>
                 </AttributeSchema>
-                <AttributeSchema name="sunAMAuthVirJDBCSaltAfterPassword"
+                <AttributeSchema name="VirJDBCSaltAfterPassword"
                                  type="single"
                                  syntax="boolean"
                                  i18nKey="a111">
@@ -109,7 +109,7 @@
                         <Value>true</Value>
                     </DefaultValues>
                 </AttributeSchema>
-                <AttributeSchema name="sunAMAuthVirJDBCTransformHashAlgorithm"
+                <AttributeSchema name="VirJDBCTransformHashAlgorithm"
                                  type="single"
                                  syntax="string"
                                  i18nKey="a112">
@@ -117,15 +117,15 @@
                         <Value>SHA-1</Value>
                     </DefaultValues>
                 </AttributeSchema>
-                <AttributeSchema name="sunAMAuthVirJDBCStatement"
+                <AttributeSchema name="VirJDBCStatement"
                                  type="single"
                                  syntax="string"
                                  i18nKey="a107">
                     <DefaultValues>
-                        <Value>select usr_password from users where usr_screen_name = ?</Value>
+                        <Value>select usr_password,usr_salt from users where usr_screen_name = ?</Value>
                     </DefaultValues>
                 </AttributeSchema>
-                <AttributeSchema name="sunAMAuthVirJDBCPasswordSyntaxTransformPlugin"
+                <AttributeSchema name="VirJDBCPasswordSyntaxTransformPlugin"
                                  type="single"
                                  syntax="string"
                                  i18nKey="a108">
@@ -133,7 +133,7 @@
                         <Value>hu.sch.vir.auth.HashTransform</Value>
                     </DefaultValues>
                 </AttributeSchema>
-                <AttributeSchema name="sunAMAuthVirJDBCAuthLevel"
+                <AttributeSchema name="iplanet-am-auth-virjdbc-auth-level"
                                  type="single"
                                  syntax="number_range" rangeStart="0" rangeEnd="2147483647"
                                  i18nKey="a109">
@@ -142,7 +142,7 @@
                     </DefaultValues>
                 </AttributeSchema>
                 <SubSchema name="serverconfig" inheritance="multiple">
-                    <AttributeSchema name="sunAMAuthVirJDBCConnectionType"
+                    <AttributeSchema name="VirJDBCConnectionType"
                                      type="single_choice"
                                      syntax="string"
                                      i18nKey="a100">
@@ -154,7 +154,7 @@
                             <Value>JNDI</Value>
                         </DefaultValues>
                     </AttributeSchema>
-                    <AttributeSchema name="sunAMAuthVirJDBCJndiName"
+                    <AttributeSchema name="VirJDBCJndiName"
                                      type="single"
                                      syntax="string"
                                      i18nKey="a101">
@@ -162,23 +162,23 @@
                             <Value>java:comp/env/jdbc/sch</Value>
                         </DefaultValues>
                     </AttributeSchema>
-                    <AttributeSchema name="sunAMAuthVirJDBCDriver"
+                    <AttributeSchema name="VirJDBCDriver"
                                      type="single"
                                      syntax="string"
                                      i18nKey="a102">
                         <DefaultValues>
-                            <Value>com.mysql.jdbc.Driver</Value>
+                            <Value></Value>
                         </DefaultValues>
                     </AttributeSchema>
-                    <AttributeSchema name="sunAMAuthVirJDBCUrl"
+                    <AttributeSchema name="VirJDBCUrl"
                                      type="single"
                                      syntax="string"
                                      i18nKey="a103">
                         <DefaultValues>
-                            <Value>jdbc:mysql://127.0.0.1:3306/test</Value>
+                            <Value></Value>
                         </DefaultValues>
                     </AttributeSchema>
-                    <AttributeSchema name="sunAMAuthVirJDBCDbuser"
+                    <AttributeSchema name="VirJDBCDbuser"
                                      type="single"
                                      syntax="string"
                                      i18nKey="a104">
@@ -186,7 +186,7 @@
                             <Value>root</Value>
                         </DefaultValues>
                     </AttributeSchema>
-                    <AttributeSchema name="sunAMAuthVirJDBCPasswordColumn"
+                    <AttributeSchema name="VirJDBCPasswordColumn"
                                      type="single"
                                      syntax="string"
                                      i18nKey="a106">
@@ -194,7 +194,7 @@
                             <Value>usr_password</Value>
                         </DefaultValues>
                     </AttributeSchema>
-                    <AttributeSchema name="sunAMAuthVirJDBCSaltColumn"
+                    <AttributeSchema name="VirJDBCSaltColumn"
                                      type="single"
                                      syntax="string"
                                      i18nKey="a110">
@@ -202,7 +202,7 @@
                             <Value>usr_salt</Value>
                         </DefaultValues>
                     </AttributeSchema>
-                    <AttributeSchema name="sunAMAuthVirJDBCSaltAfterPassword"
+                    <AttributeSchema name="VirJDBCSaltAfterPassword"
                                      type="single"
                                      syntax="boolean"
                                      i18nKey="a111">
@@ -210,7 +210,7 @@
                             <Value>true</Value>
                         </DefaultValues>
                     </AttributeSchema>
-                    <AttributeSchema name="sunAMAuthVirJDBCTransformHashAlgorithm"
+                    <AttributeSchema name="VirJDBCTransformHashAlgorithm"
                                      type="single"
                                      syntax="string"
                                      i18nKey="a112">
@@ -218,15 +218,15 @@
                             <Value>SHA-1</Value>
                         </DefaultValues>
                     </AttributeSchema>
-                    <AttributeSchema name="sunAMAuthVirJDBCStatement"
+                    <AttributeSchema name="VirJDBCStatement"
                                      type="single"
                                      syntax="string"
                                      i18nKey="a107">
                         <DefaultValues>
-                            <Value>select usr_password from users where usr_screen_name = ?</Value>
+                            <Value>select usr_password,usr_salt from users where usr_screen_name = ?</Value>
                         </DefaultValues>
                     </AttributeSchema>
-                    <AttributeSchema name="sunAMAuthVirJDBCPasswordSyntaxTransformPlugin"
+                    <AttributeSchema name="VirJDBCPasswordSyntaxTransformPlugin"
                                      type="single"
                                      syntax="string"
                                      i18nKey="a108">
@@ -234,7 +234,7 @@
                             <Value>hu.sch.vir.auth.HashTransform</Value>
                         </DefaultValues>
                     </AttributeSchema>
-                    <AttributeSchema name="sunAMAuthVirJDBCAuthLevel"
+                    <AttributeSchema name="iplanet-am-auth-virjdbc-auth-level"
                                      type="single"
                                      syntax="number_range" rangeStart="0" rangeEnd="2147483647"
                                      i18nKey="a109">
