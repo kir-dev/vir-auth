@@ -27,6 +27,8 @@
  */
 package hu.sch.vir.auth;
 
+import hu.sch.vir.auth.password.JDBCTransformParams;
+import hu.sch.vir.auth.password.JDBCPasswordSyntaxTransform;
 import com.sun.identity.shared.debug.Debug;
 import com.sun.identity.shared.datastruct.CollectionHelper;
 import com.sun.identity.authentication.spi.AMLoginModule;
@@ -62,7 +64,7 @@ public class VirJDBC extends AMLoginModule {
     private char[] passwordCharArray;
     private java.security.Principal userPrincipal = null;
     private String errorMsg = null;
-    static final String amAuthVirJDBC = "amAuthVirJDBC";
+    public static final String amAuthVirJDBC = "amAuthVirJDBC";
     private static Debug debug = Debug.getInstance(amAuthVirJDBC);
     private ResourceBundle bundle = null;
     private Map options;
@@ -77,7 +79,7 @@ public class VirJDBC extends AMLoginModule {
     private static String TRANSFORM = "VirJDBCPasswordSyntaxTransformPlugin";
     private static String AUTHLEVEL = "iplanet-am-auth-virjdbc-auth-level";
     private static String DEFAULT_TRANSFORM =
-            "com.sun.identity.authentication.modules.jdbc.ClearTextTransform";
+            "hu.sch.vir.auth.password.HashTransform";
     private String driver;
     private String connectionType;
     private String jndiName;

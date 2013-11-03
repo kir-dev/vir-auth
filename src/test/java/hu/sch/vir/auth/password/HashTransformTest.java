@@ -1,5 +1,7 @@
-package hu.sch.vir.auth;
+package hu.sch.vir.auth.password;
 
+import hu.sch.vir.auth.password.HashTransform;
+import hu.sch.vir.auth.password.JDBCTransformParams;
 import com.sun.identity.authentication.spi.AuthLoginException;
 import java.util.Collections;
 import java.util.HashMap;

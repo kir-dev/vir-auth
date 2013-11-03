@@ -23,7 +23,7 @@
  *
  * Portions Copyrighted 2012 Sam Crawford
  */
-package hu.sch.vir.auth;
+package hu.sch.vir.auth.password;
 
 import com.sun.identity.authentication.spi.AuthLoginException;
 import java.util.Collections;

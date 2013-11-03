@@ -130,7 +130,7 @@
                                  syntax="string"
                                  i18nKey="a108">
                     <DefaultValues>
-                        <Value>hu.sch.vir.auth.HashTransform</Value>
+                        <Value>hu.sch.vir.auth.password.HashTransform</Value>
                     </DefaultValues>
                 </AttributeSchema>
                 <AttributeSchema name="iplanet-am-auth-virjdbc-auth-level"
@@ -231,7 +231,7 @@
                                      syntax="string"
                                      i18nKey="a108">
                         <DefaultValues>
-                            <Value>hu.sch.vir.auth.HashTransform</Value>
+                            <Value>hu.sch.vir.auth.password.HashTransform</Value>
                         </DefaultValues>
                     </AttributeSchema>
                     <AttributeSchema name="iplanet-am-auth-virjdbc-auth-level"

@@ -22,37 +22,29 @@
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  *
- * $Id: ClearTextTransform.java,v 1.2 2008/06/25 05:41:57 qcheng Exp $
+ * $Id: JDBCPasswordSyntaxTransform.java,v 1.3 2008/06/25 05:41:57 qcheng Exp $
  *
  */
 
 
-package hu.sch.vir.auth;
+package hu.sch.vir.auth.password;
 
 import com.sun.identity.authentication.spi.AuthLoginException;
-   
+
 /**
- * A very simple test implementation of the JDBC Password Syntax Transform.
+ * This is the interface to implement if you don't store your password
+ * in clear text.
  */
-public class ClearTextTransform implements JDBCPasswordSyntaxTransform  {
-    /** 
-     * Creates a new instance of <code>ClearTextTransform</code>. 
-     */
-    public ClearTextTransform() {
-    }
-    
-    /** 
-     * This simply returns the clear text format of the password. 
+public interface JDBCPasswordSyntaxTransform {
+    /**
+     * This is the only method to implement if you don't store your password in
+     * cleartext.
+     * Take the string the user gave you, and hash it or whatever
      *
      * @param input Password before transform
-     * @return Password after transform in this case the same thing.
+     * @return Password after transform - in this case the same thing.
      * @throws AuthLoginException
-     */  
-    public String transform(String input) throws AuthLoginException {
-        if (input == null) {
-            throw new AuthLoginException(
-                "No input to the Clear Text Transform!");
-        }
-        return input;
-    }
+     */
+    String transform(String input)
+        throws AuthLoginException;
 }

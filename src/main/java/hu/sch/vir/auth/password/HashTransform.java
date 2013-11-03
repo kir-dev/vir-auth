@@ -23,7 +23,7 @@
  *
  * Portions Copyrighted 2012 Sam Crawford
  */
-package hu.sch.vir.auth;
+package hu.sch.vir.auth.password;
 
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
@@ -32,6 +32,7 @@ import java.security.NoSuchAlgorithmException;
 import com.sun.identity.authentication.spi.AuthLoginException;
 import com.sun.identity.shared.datastruct.CollectionHelper;
 import com.sun.identity.shared.debug.Debug;
+import hu.sch.vir.auth.VirJDBC;
 import org.apache.commons.codec.binary.Base64;
 
 /**
