@@ -411,42 +411,40 @@ public class VirJDBC extends AMLoginModule {
             }
         }
 
-        if (!transform.equals(DEFAULT_TRANSFORM)) {
+        try {
+            // Attempt to load the transforms constructor
+            // that accepts a JDBCTransformParams instance.
+            // If not found, use empty constructor.
+            JDBCPasswordSyntaxTransform syntaxTransform;
+            final Class classTransform = Class.forName(transform);
+            Constructor ctr = null;
             try {
-                // Attempt to load the transforms constructor
-                // that accepts a JDBCTransformParams instance.
-                // If not found, use empty constructor.
-                JDBCPasswordSyntaxTransform syntaxTransform;
-                final Class classTransform = Class.forName(transform);
-                Constructor ctr = null;
-                try {
-                    ctr = classTransform.getConstructor(
-                            JDBCTransformParams.class);
-                } catch (Exception ignored) {
-                }
-                if (ctr != null) {
-                    final JDBCTransformParams transformParams =
-                            new JDBCTransformParams(options, mapResult);
-                    syntaxTransform = (JDBCPasswordSyntaxTransform) ctr.newInstance(new Object[]{transformParams});
-                } else {
-                    syntaxTransform = (JDBCPasswordSyntaxTransform) classTransform.newInstance();
-                }
-
-                if (debug.messageEnabled()) {
-                    debug.message("Got my Transform Object"
-                            + syntaxTransform.toString());
-                }
-                password = syntaxTransform.transform(password);
-
-                if (debug.messageEnabled()) {
-                    debug.message("Password transformed by: " + transform);
-                }
-            } catch (Throwable e) {
-                if (debug.messageEnabled()) {
-                    debug.message("Syntax Transform Exception:" + e.toString());
-                }
-                throw new AuthLoginException(e);
+                ctr = classTransform.getConstructor(
+                        JDBCTransformParams.class);
+            } catch (Exception ignored) {
             }
+            if (ctr != null) {
+                final JDBCTransformParams transformParams =
+                        new JDBCTransformParams(options, mapResult);
+                syntaxTransform = (JDBCPasswordSyntaxTransform) ctr.newInstance(new Object[]{transformParams});
+            } else {
+                syntaxTransform = (JDBCPasswordSyntaxTransform) classTransform.newInstance();
+            }
+
+            if (debug.messageEnabled()) {
+                debug.message("Got my Transform Object"
+                        + syntaxTransform.toString());
+            }
+            password = syntaxTransform.transform(password);
+
+            if (debug.messageEnabled()) {
+                debug.message("Password transformed by: " + transform);
+            }
+        } catch (Throwable e) {
+            if (debug.messageEnabled()) {
+                debug.message("Syntax Transform Exception:" + e.toString());
+            }
+            throw new AuthLoginException(e);
         }
         // see if the passwords match
         if (password != null && password.equals(resultPassword)) {
