@@ -20,8 +20,6 @@
  *
  * $Id: VirJDBC.java,v 1.5 2008/08/28 21:56:45 madan_ranganath Exp $
  *
- */
-/**
  * Portions Copyrighted 2011 ForgeRock Inc Portions Copyrighted 2012 Open Source
  * Solution Technology Corporation
  */
@@ -65,20 +63,20 @@ public class VirJDBC extends AMLoginModule {
     private java.security.Principal userPrincipal = null;
     private String errorMsg = null;
     public static final String amAuthVirJDBC = "amAuthVirJDBC";
-    private static Debug debug = Debug.getInstance(amAuthVirJDBC);
+    private static final Debug debug = Debug.getInstance(amAuthVirJDBC);
     private ResourceBundle bundle = null;
     private Map options;
-    private static String CONNECTIONTYPE = "VirJDBCConnectionType";
-    private static String JNDINAME = "VirJDBCJndiName";
-    private static String DRIVER = "VirJDBCDriver";
-    private static String URL = "VirJDBCUrl";
-    private static String DBUSER = "VirJDBCDbuser";
-    private static String DBPASSWORD = "VirJDBCDbpassword";
-    private static String PASSWORDCOLUMN = "VirJDBCPasswordColumn";
-    private static String STATEMENT = "VirJDBCStatement";
-    private static String TRANSFORM = "VirJDBCPasswordSyntaxTransformPlugin";
-    private static String AUTHLEVEL = "iplanet-am-auth-virjdbc-auth-level";
-    private static String DEFAULT_TRANSFORM =
+    private static final String CONNECTIONTYPE = "VirJDBCConnectionType";
+    private static final String JNDINAME = "VirJDBCJndiName";
+    private static final String DRIVER = "VirJDBCDriver";
+    private static final String URL = "VirJDBCUrl";
+    private static final String DBUSER = "VirJDBCDbuser";
+    private static final String DBPASSWORD = "VirJDBCDbpassword";
+    private static final String PASSWORDCOLUMN = "VirJDBCPasswordColumn";
+    private static final String STATEMENT = "VirJDBCStatement";
+    private static final String TRANSFORM = "VirJDBCPasswordSyntaxTransformPlugin";
+    private static final String AUTHLEVEL = "iplanet-am-auth-virjdbc-auth-level";
+    private static final String DEFAULT_TRANSFORM =
             "hu.sch.vir.auth.password.HashTransform";
     private String driver;
     private String connectionType;

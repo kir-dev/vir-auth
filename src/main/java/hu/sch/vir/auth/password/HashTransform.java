@@ -56,6 +56,7 @@ public class HashTransform implements JDBCPasswordSyntaxTransform {
 
     /**
      * Creates a new instance of {@link HashTransform} with no options.
+     * @throws com.sun.identity.authentication.spi.AuthLoginException
      */
     public HashTransform() throws AuthLoginException {
         this(null);
@@ -70,6 +71,7 @@ public class HashTransform implements JDBCPasswordSyntaxTransform {
      * Note: it does NOT create defensive copy of the supplied
      * {@link JDBCTransformParams} argument
      *
+     * @param params
      * @throws AuthLoginException when the parameter is null
      */
     public HashTransform(final JDBCTransformParams params) throws AuthLoginException {
