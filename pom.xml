@@ -27,17 +27,17 @@
     <modelVersion>4.0.0</modelVersion>
 
     <!-- Component Definition -->
-    <name>OpenAM VIR Auth JDBC</name>
-    <description>OpenAM VIR Authentication JDBC</description>
+    <name>OpenAM VIR Auth JDBC (OpenAM-${openam.version})</name>
+    <description>Fork of the official JDBC auth module of OpenAM, developed for the VIR SSO</description>
     <groupId>hu.sch</groupId>
     <artifactId>openam-auth-vir-jdbc</artifactId>
-    <version>10.0.1</version>
+    <version>2.0</version>
     <packaging>jar</packaging>
 
     <repositories>
         <!-- ForgeRock Internal Project Repository -->
         <repository>
-            <id>maven.forgerock.org</id>
+            <id>openam-dependencies</id>
             <name>maven.forgerock.org-openam-dependencies</name>
             <url>http://maven.forgerock.org/repo/openam-dependencies</url>
             <releases>
@@ -49,29 +49,33 @@
         </repository>
 
         <repository>
-            <id>forgerock-snapshots-repo</id>
-            <name>ForgeRock Snapshot Repository</name>
+            <id>FR releases</id>
+            <name>maven.forgerock.org-releases</name>
+            <url>http://maven.forgerock.org/repo/releases</url>
+        </repository>
+
+        <repository>
+            <id>FR snapshots</id>
+            <name>maven.forgerock.org-snapshots</name>
             <url>http://maven.forgerock.org/repo/snapshots</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
         </repository>
     </repositories>
+
+    <properties>
+        <openam.version>11.0.0</openam.version>
+    </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.forgerock.openam</groupId>
             <artifactId>openam-shared</artifactId>
-            <version>11.0.0-SNAPSHOT</version>
+            <version>${openam.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.forgerock.openam</groupId>
             <artifactId>openam-core</artifactId>
-            <version>11.0.0-SNAPSHOT</version>
+            <version>${openam.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -112,9 +116,19 @@
                             <Build-Jdk>${java.version}</Build-Jdk>
                             <Build-Time>${maven.build.timestamp}</Build-Time>
                             <Version>${project.version}</Version>
+                            <OpenAM-Version>${openam.version}</OpenAM-Version>
                             <Create-On>${maven.build.timestamp}</Create-On>
                         </manifestEntries>
                     </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
                 </configuration>
             </plugin>
         </plugins>
