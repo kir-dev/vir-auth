@@ -37,15 +37,16 @@ import java.lang.reflect.Constructor;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.NameCallback;
@@ -56,7 +57,6 @@ public class VirJDBC extends AMLoginModule {
 
     private String userTokenId;
     private String userName;
-    private String password;
     private String resultPassword;
     private char[] passwordCharArray;
     private java.security.Principal userPrincipal = null;
@@ -64,32 +64,17 @@ public class VirJDBC extends AMLoginModule {
     public static final String amAuthVirJDBC = "amAuthVirJDBC";
     private static final Debug debug = Debug.getInstance(amAuthVirJDBC);
     private ResourceBundle bundle = null;
-    private Map options;
-    private static final String CONNECTIONTYPE = "VirJDBCConnectionType";
-    private static final String JNDINAME = "VirJDBCJndiName";
-    private static final String DRIVER = "VirJDBCDriver";
-    private static final String URL = "VirJDBCUrl";
-    private static final String DBUSER = "VirJDBCDbuser";
-    private static final String DBPASSWORD = "VirJDBCDbpassword";
-    private static final String PASSWORDCOLUMN = "VirJDBCPasswordColumn";
-    private static final String STATEMENT = "VirJDBCStatement";
-    private static final String TRANSFORM = "VirJDBCPasswordSyntaxTransformPlugin";
-    private static final String AUTHLEVEL = "iplanet-am-auth-virjdbc-auth-level";
-    private static final String DEFAULT_TRANSFORM =
-            "hu.sch.vir.auth.password.HashTransform";
-    private String driver;
-    private String connectionType;
+    private Map<String, Object> options;
     private String jndiName;
-    private String url;
-    private String dbuser;
-    private String dbpassword;
     private String passwordColumn;
-    private String statement;
-    private String transform;
+    private static final String JNDINAME_OPT = "VirJDBCJndiName";
+    private static final String PASSWORD_COLUMN_OPT = "VirJDBCPasswordColumn";
+    private static final String AUTHLEVEL_OPT = "iplanet-am-auth-virjdbc-auth-level";
+    private static final String STATEMENT = "select usr_password,usr_salt from users where usr_screen_name = ?";
+    private static final String TRANSFORM = "hu.sch.vir.auth.password.HashTransform";
     private Map sharedState;
     private boolean getCredentialsFromSharedState = false;
     private static final int MAX_NAME_LENGTH = 80;
-    private boolean useJNDI = false;
 
     /**
      * Constructor.
@@ -121,89 +106,21 @@ public class VirJDBC extends AMLoginModule {
 
         if (options != null) {
             try {
-                // First, figure out the type of connection
-                connectionType = CollectionHelper.getMapAttr(
-                        options, CONNECTIONTYPE);
-                if (connectionType == null) {
-                    debug.message("No CONNECTIONTYPE for configuring");
-                    errorMsg = "noCONNECTIONTYPE";
+                debug.message("Using JNDI Retrieved Connection pool");
+                jndiName = CollectionHelper.getMapAttr(options, JNDINAME_OPT);
+                if (jndiName == null) {
+                    debug.message("No JNDINAME for configuring");
+                    errorMsg = "noJNDINAME";
                     return;
                 } else {
                     if (debug.messageEnabled()) {
-                        debug.message("Found config for CONNECTIONTYPE: "
-                                + connectionType);
-                    }
-
-                    if (connectionType.equals("JNDI")) {
-                        useJNDI = true;
-                    }
-
-                    // If its pooled, get the JNDI name
-                    if (useJNDI) {
-                        debug.message("Using JNDI Retrieved Connection pool");
-                        jndiName = CollectionHelper.getMapAttr(
-                                options, JNDINAME);
-                        if (jndiName == null) {
-                            debug.message("No JNDINAME for configuring");
-                            errorMsg = "noJNDINAME";
-                            return;
-                        } else {
-                            if (debug.messageEnabled()) {
-                                debug.message("Found config for JNDINAME: "
-                                        + jndiName);
-                            }
-                        }
-
-                        // If its a non-pooled, then get the VirJDBC config
-                    } else {
-                        debug.message("Using non pooled JDBC");
-                        driver = CollectionHelper.getMapAttr(options, DRIVER);
-                        if (driver == null) {
-                            debug.message("No DRIVER for configuring");
-                            errorMsg = "noDRIVER";
-                            return;
-                        } else {
-                            if (debug.messageEnabled()) {
-                                debug.message("Found config for DRIVER: "
-                                        + driver);
-                            }
-                        }
-
-                        url = CollectionHelper.getMapAttr(options, URL);
-                        if (url == null) {
-                            debug.message("No URL for configuring");
-                            errorMsg = "noURL";
-                            return;
-                        } else {
-                            if (debug.messageEnabled()) {
-                                debug.message("Found config for URL: " + url);
-                            }
-                        }
-                        dbuser = CollectionHelper.getMapAttr(options, DBUSER);
-                        if (dbuser == null) {
-                            debug.message("No DBUSER for configuring");
-                            errorMsg = "noDBUSER";
-                            return;
-                        } else {
-                            if (debug.messageEnabled()) {
-                                debug.message("Found config for DBUSER: "
-                                        + dbuser);
-                            }
-                        }
-
-                        dbpassword = CollectionHelper.getMapAttr(
-                                options, DBPASSWORD, "");
-                        if (dbpassword == null) {
-                            debug.message("No DBPASSWORD for configuring");
-                            errorMsg = "noDBPASSWORD";
-                            return;
-                        }
+                        debug.message("Found config for JNDINAME: " + jndiName);
                     }
                 }
 
-                // and get the props that apply to both connection types 
+                // and get the props that apply to both connection types
                 passwordColumn = CollectionHelper.getMapAttr(
-                        options, PASSWORDCOLUMN);
+                        options, PASSWORD_COLUMN_OPT);
                 if (passwordColumn == null) {
                     debug.message("No PASSWORDCOLUMN for configuring");
                     errorMsg = "noPASSWORDCOLUMN";
@@ -214,32 +131,17 @@ public class VirJDBC extends AMLoginModule {
                                 + passwordColumn);
                     }
                 }
-                statement = CollectionHelper.getMapAttr(options, STATEMENT);
-                if (statement == null) {
-                    debug.message("No STATEMENT for configuring");
-                    errorMsg = "noSTATEMENT";
-                }
-                transform = CollectionHelper.getMapAttr(options, TRANSFORM);
-                if (transform == null) {
-                    if (debug.messageEnabled()) {
-                        debug.message("No TRANSFORM for configuring."
-                                + "Using clear text");
-                    }
-                    transform = DEFAULT_TRANSFORM;
-                } else {
-                    if (debug.messageEnabled()) {
-                        debug.message("Plugin for TRANSFORM: " + transform);
-                    }
+
+                if (debug.messageEnabled()) {
+                    debug.message("Plugin for TRANSFORM: " + TRANSFORM);
                 }
 
-                String authLevel = CollectionHelper.getMapAttr(
-                        options, AUTHLEVEL);
+                final String authLevel = CollectionHelper.getMapAttr(options, AUTHLEVEL_OPT);
                 if (authLevel != null) {
                     try {
                         setAuthLevel(Integer.parseInt(authLevel));
-                    } catch (Exception e) {
-                        debug.error("Unable to set auth level "
-                                + authLevel, e);
+                    } catch (NumberFormatException e) {
+                        debug.error("Unable to set auth level " + authLevel, e);
                     }
                 }
 
@@ -252,13 +154,15 @@ public class VirJDBC extends AMLoginModule {
     /**
      * Processes the authentication request.
      *
+     * @param callbacks
+     * @param state
      * @return <code>ISAuthConstants.LOGIN_SUCCEED</code> as succeeded;
      * <code>ISAuthConstants.LOGIN_IGNORE</code> as failed.
-     * @exception AuthLoginException upon any failure. login state should be
-     * kept on exceptions for status check in auth chaining.
+     * @throws AuthLoginException upon any failure. login state should be kept
+     * on exceptions for status check in auth chaining.
      */
     @Override
-    public int process(Callback[] callbacks, int state)
+    public int process(final Callback[] callbacks, final int state)
             throws AuthLoginException {
         // return if this module is already done
         if (errorMsg != null) {
@@ -272,10 +176,11 @@ public class VirJDBC extends AMLoginModule {
             throw new AuthLoginException(amAuthVirJDBC, "invalidState", null);
         }
 
+        String givenPassword;
         if (callbacks != null && callbacks.length == 0) {
             userName = (String) sharedState.get(getUserKey());
-            password = (String) sharedState.get(getPwdKey());
-            if (userName == null || password == null) {
+            givenPassword = (String) sharedState.get(getPwdKey());
+            if (userName == null || givenPassword == null) {
                 return ISAuthConstants.LOGIN_START;
             }
             getCredentialsFromSharedState = true;
@@ -286,14 +191,12 @@ public class VirJDBC extends AMLoginModule {
             }
 
             passwordCharArray = ((PasswordCallback) callbacks[1]).getPassword();
-            password = new String(passwordCharArray);
+            givenPassword = String.valueOf(passwordCharArray);
 
             if (userName == null || userName.length() == 0) {
                 throw new AuthLoginException(amAuthVirJDBC, "noUserName", null);
             }
         }
-
-        storeUsernamePasswd(userName, password);
 
         // Check if they'return being a bit malicious with their UID.
         // SQL attacks will be handled by prepared stmt escaping.
@@ -301,78 +204,32 @@ public class VirJDBC extends AMLoginModule {
             throw new AuthLoginException(amAuthVirJDBC, "userNameTooLong", null);
         }
 
-        Map mapResult = null;
-        Connection database = null;
-        PreparedStatement thisStatement = null;
-        ResultSet results = null;
+        String transformedPassword = null;
         try {
-            if (useJNDI) {
-                Context initctx = new InitialContext();
-                DataSource ds = (DataSource) initctx.lookup(jndiName);
+            final Context initctx = new InitialContext();
+            final DataSource ds = (DataSource) initctx.lookup(jndiName);
+
+            if (debug.messageEnabled()) {
+                debug.message("Datasource Acquired: " + ds.toString());
+            }
+
+            try (Connection database = ds.getConnection()) {
 
                 if (debug.messageEnabled()) {
-                    debug.message("Datasource Acquired: " + ds.toString());
+                    debug.message("Connection Acquired: " + database.toString());
                 }
-                database = ds.getConnection();
-                debug.message("Using JNDI Retrieved Connection pool");
 
-            } else {
-                Class.forName(driver);
-                database = DriverManager.getConnection(url, dbuser, dbpassword);
-            }
-            if (debug.messageEnabled()) {
-                debug.message("Connection Acquired: " + database.toString());
-            }
-            //Prepare the statement for execution
-            if (debug.messageEnabled()) {
-                debug.message("PreparedStatement to build: " + statement);
-            }
-            thisStatement =
-                    database.prepareStatement(statement);
-            thisStatement.setString(1, userName);
-            if (debug.messageEnabled()) {
-                debug.message("Statement to execute: " + thisStatement);
-            }
-
-            // execute the query
-            results = thisStatement.executeQuery();
-
-            if (results == null) {
-                debug.message("returned null from executeQuery()");
-                throw new AuthLoginException(amAuthVirJDBC, "nullResult", null);
-            }
-
-            //parse the results.  should only be one item in one row.
-            int index = 0;
-            while (results.next()) {
-                // do normal processing..its the first and last row
-                index++;
-                if (index > 1) {
-                    if (debug.messageEnabled()) {
-                        debug.message("Too many results."
-                                + "UID should be a primary key");
-                    }
-                    throw new AuthLoginException(amAuthVirJDBC, "multiEntry", null);
-                }
-                resultPassword = results.getString(passwordColumn).trim();
-
-                ResultSetMetaData meta = results.getMetaData();
-                int cols = meta.getColumnCount();
-                mapResult = new HashMap();
-                for (int i = 1; i <= cols; ++i) {
-                    final String colName = meta.getColumnName(i);
-                    mapResult.put(colName, results.getObject(colName));
-                }
-            }
-            if (index == 0) {
-                // no results
+                //Prepare the statement for execution
                 if (debug.messageEnabled()) {
-                    debug.message("No results from your SQL query."
-                            + "UID should be valid");
+                    debug.message("PreparedStatement to build: " + STATEMENT);
                 }
-                throw new AuthLoginException(amAuthVirJDBC, "nullResult", null);
+
+                final Map<String, Object> mapResult = loadUser(database);
+                resultPassword = String.valueOf(mapResult.get(passwordColumn));
+
+                transformedPassword = getTransformedPassword(givenPassword, mapResult);
             }
-        } catch (Throwable e) {
+        } catch (NamingException | SQLException | AuthLoginException e) {
             if (getCredentialsFromSharedState && !isUseFirstPassEnabled()) {
                 getCredentialsFromSharedState = false;
                 return ISAuthConstants.LOGIN_START;
@@ -381,42 +238,12 @@ public class VirJDBC extends AMLoginModule {
                 debug.message("JDBC Exception:", e);
             }
             throw new AuthLoginException(e);
-        } finally {
-            // close the resultset
-            if (results != null) {
-                try {
-                    results.close();
-                } catch (Exception e) {
-                    // ignore
-                }
-            }
-            // close the statement
-            if (thisStatement != null) {
-                try {
-                    thisStatement.close();
-                } catch (Exception e) {
-                    // ignore
-                }
-            }
-            // close the connection when done
-            if (database != null) {
-                try {
-                    database.close();
-                } catch (Exception dbe) {
-                    debug.error("Error in closing database connection: "
-                            + dbe.getMessage());
-                    if (debug.messageEnabled()) {
-                        debug.message("Fail to close database:", dbe);
-                    }
-                }
-            }
         }
 
-        password = getTransformedPassword(password, mapResult);
-
         // see if the passwords match
-        if (password != null && password.equals(resultPassword)) {
+        if (transformedPassword != null && transformedPassword.equals(resultPassword)) {
             userTokenId = userName;
+            storeUsernamePasswd(userName, givenPassword);
             return ISAuthConstants.LOGIN_SUCCEED;
         } else {
             debug.message("password not match. Auth failed.");
@@ -426,14 +253,77 @@ public class VirJDBC extends AMLoginModule {
         }
     }
 
-    private String getTransformedPassword(final String plainPassword, final Map mapResult)
+    /**
+     * Loads the user record from the database.
+     *
+     * @param database database connection. The method doesn't close this
+     * connection.
+     * @return the record in map. The keys are columns of the database.
+     * @throws SQLException upon any database related error
+     * @throws AuthLoginException when multiple entries or no entries found
+     */
+    private Map<String, Object> loadUser(final Connection database) throws SQLException, AuthLoginException {
+
+        Map<String, Object> mapResult = new HashMap<>();
+        try (PreparedStatement thisStatement = database.prepareStatement(STATEMENT)) {
+            thisStatement.setString(1, userName);
+            if (debug.messageEnabled()) {
+                debug.message("Statement to execute: " + thisStatement);
+            }
+
+            // execute the query
+            try (ResultSet results = thisStatement.executeQuery()) {
+
+                //parse the results.  should only be one item in one row.
+                int index = 0;
+                while (results.next()) {
+                    // do normal processing..its the first and last row
+                    index++;
+                    if (index > 1) {
+                        if (debug.messageEnabled()) {
+                            debug.message("Too many results. UID should be a primary key");
+                        }
+                        throw new AuthLoginException(amAuthVirJDBC, "multiEntry", null);
+                    }
+
+                    final ResultSetMetaData meta = results.getMetaData();
+                    final int cols = meta.getColumnCount();
+                    for (int i = 1; i <= cols; ++i) {
+                        final String colName = meta.getColumnName(i);
+                        mapResult.put(colName, results.getObject(colName));
+                    }
+                }
+                if (index == 0) {
+                    // no results
+                    if (debug.messageEnabled()) {
+                        debug.message("No results from your SQL query."
+                                + "UID should be valid");
+                    }
+                    throw new AuthLoginException(amAuthVirJDBC, "nullResult", null);
+                }
+            }
+        }
+
+        return mapResult;
+    }
+
+    /**
+     * Returns the transformed password with the given plugin specified in
+     * TRANSFORM.
+     *
+     * @param plainPassword the password given by the user
+     * @param mapResult the database record of the user
+     * @return the transformed password
+     * @throws AuthLoginException upon any failure
+     */
+    private String getTransformedPassword(final String plainPassword, final Map<String, Object> mapResult)
             throws AuthLoginException {
 
         try {
             // Attempt to load the transforms constructor
             // that accepts a JDBCTransformParams instance.
             // If not found, use empty constructor.
-            final Class classTransform = Class.forName(transform);
+            final Class classTransform = Class.forName(TRANSFORM);
             Constructor ctr = null;
             try {
                 ctr = classTransform.getConstructor(
@@ -498,21 +388,12 @@ public class VirJDBC extends AMLoginModule {
     @Override
     public void nullifyUsedVars() {
         userName = null;
-        password = null;
         resultPassword = null;
         passwordCharArray = null;
         errorMsg = null;
         bundle = null;
         options = null;
-        driver = null;
-        connectionType = null;
         jndiName = null;
-        url = null;
-        dbuser = null;
-        dbpassword = null;
-        passwordColumn = null;
-        statement = null;
-        transform = null;
         sharedState = null;
     }
 }

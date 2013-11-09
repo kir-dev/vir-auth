@@ -41,54 +41,18 @@
             i18nKey="amAuthVirJDBCServiceDescription">
 
             <Organization>
-                <AttributeSchema name="VirJDBCConnectionType"
-                                 type="single_choice"
-                                 syntax="string"
-                                 i18nKey="a100">
-                    <ChoiceValues>
-                        <ChoiceValue i18nKey="choiceJNDI">JNDI</ChoiceValue> 
-                        <ChoiceValue i18nKey="choiceURL">JDBC</ChoiceValue>
-                    </ChoiceValues>
-                    <DefaultValues>
-                        <Value>JNDI</Value>
-                    </DefaultValues>
-                </AttributeSchema>
                 <AttributeSchema name="VirJDBCJndiName"
                                  type="single"
                                  syntax="string"
-                                 i18nKey="a101">
+                                 i18nKey="a100">
                     <DefaultValues>
                         <Value>java:comp/env/jdbc/sch</Value>
-                    </DefaultValues>
-                </AttributeSchema>
-                <AttributeSchema name="VirJDBCDriver"
-                                 type="single"
-                                 syntax="string"
-                                 i18nKey="a102">
-                    <DefaultValues>
-                        <Value></Value>
-                    </DefaultValues>
-                </AttributeSchema>
-                <AttributeSchema name="VirJDBCUrl"
-                                 type="single"
-                                 syntax="string"
-                                 i18nKey="a103">
-                    <DefaultValues>
-                        <Value></Value>
-                    </DefaultValues>
-                </AttributeSchema>
-                <AttributeSchema name="VirJDBCDbuser"
-                                 type="single"
-                                 syntax="string"
-                                 i18nKey="a104">
-                    <DefaultValues>
-                        <Value></Value>
                     </DefaultValues>
                 </AttributeSchema>
                 <AttributeSchema name="VirJDBCPasswordColumn"
                                  type="single"
                                  syntax="string"
-                                 i18nKey="a106">
+                                 i18nKey="a101">
                     <DefaultValues>
                         <Value>usr_password</Value>
                     </DefaultValues>
@@ -96,7 +60,7 @@
                 <AttributeSchema name="VirJDBCSaltColumn"
                                  type="single"
                                  syntax="string"
-                                 i18nKey="a110">
+                                 i18nKey="a102">
                     <DefaultValues>
                         <Value>usr_salt</Value>
                     </DefaultValues>
@@ -104,7 +68,7 @@
                 <AttributeSchema name="VirJDBCSaltAfterPassword"
                                  type="single"
                                  syntax="boolean"
-                                 i18nKey="a111">
+                                 i18nKey="a103">
                     <DefaultValues>
                         <Value>true</Value>
                     </DefaultValues>
@@ -112,84 +76,32 @@
                 <AttributeSchema name="VirJDBCTransformHashAlgorithm"
                                  type="single"
                                  syntax="string"
-                                 i18nKey="a112">
+                                 i18nKey="a104">
                     <DefaultValues>
                         <Value>SHA-1</Value>
-                    </DefaultValues>
-                </AttributeSchema>
-                <AttributeSchema name="VirJDBCStatement"
-                                 type="single"
-                                 syntax="string"
-                                 i18nKey="a107">
-                    <DefaultValues>
-                        <Value>select usr_password,usr_salt from users where usr_screen_name = ?</Value>
-                    </DefaultValues>
-                </AttributeSchema>
-                <AttributeSchema name="VirJDBCPasswordSyntaxTransformPlugin"
-                                 type="single"
-                                 syntax="string"
-                                 i18nKey="a108">
-                    <DefaultValues>
-                        <Value>hu.sch.vir.auth.password.HashTransform</Value>
                     </DefaultValues>
                 </AttributeSchema>
                 <AttributeSchema name="iplanet-am-auth-virjdbc-auth-level"
                                  type="single"
                                  syntax="number_range" rangeStart="0" rangeEnd="2147483647"
-                                 i18nKey="a109">
+                                 i18nKey="a105">
                     <DefaultValues>
                         <Value>0</Value>
                     </DefaultValues>
                 </AttributeSchema>
                 <SubSchema name="serverconfig" inheritance="multiple">
-                    <AttributeSchema name="VirJDBCConnectionType"
-                                     type="single_choice"
-                                     syntax="string"
-                                     i18nKey="a100">
-                        <ChoiceValues>
-                            <ChoiceValue i18nKey="choiceJNDI">JNDI</ChoiceValue>
-                            <ChoiceValue i18nKey="choiceURL">JDBC</ChoiceValue>
-                        </ChoiceValues>
-                        <DefaultValues>
-                            <Value>JNDI</Value>
-                        </DefaultValues>
-                    </AttributeSchema>
                     <AttributeSchema name="VirJDBCJndiName"
                                      type="single"
                                      syntax="string"
-                                     i18nKey="a101">
+                                     i18nKey="a100">
                         <DefaultValues>
                             <Value>java:comp/env/jdbc/sch</Value>
-                        </DefaultValues>
-                    </AttributeSchema>
-                    <AttributeSchema name="VirJDBCDriver"
-                                     type="single"
-                                     syntax="string"
-                                     i18nKey="a102">
-                        <DefaultValues>
-                            <Value></Value>
-                        </DefaultValues>
-                    </AttributeSchema>
-                    <AttributeSchema name="VirJDBCUrl"
-                                     type="single"
-                                     syntax="string"
-                                     i18nKey="a103">
-                        <DefaultValues>
-                            <Value></Value>
-                        </DefaultValues>
-                    </AttributeSchema>
-                    <AttributeSchema name="VirJDBCDbuser"
-                                     type="single"
-                                     syntax="string"
-                                     i18nKey="a104">
-                        <DefaultValues>
-                            <Value>root</Value>
                         </DefaultValues>
                     </AttributeSchema>
                     <AttributeSchema name="VirJDBCPasswordColumn"
                                      type="single"
                                      syntax="string"
-                                     i18nKey="a106">
+                                     i18nKey="a101">
                         <DefaultValues>
                             <Value>usr_password</Value>
                         </DefaultValues>
@@ -197,7 +109,7 @@
                     <AttributeSchema name="VirJDBCSaltColumn"
                                      type="single"
                                      syntax="string"
-                                     i18nKey="a110">
+                                     i18nKey="a102">
                         <DefaultValues>
                             <Value>usr_salt</Value>
                         </DefaultValues>
@@ -205,7 +117,7 @@
                     <AttributeSchema name="VirJDBCSaltAfterPassword"
                                      type="single"
                                      syntax="boolean"
-                                     i18nKey="a111">
+                                     i18nKey="a103">
                         <DefaultValues>
                             <Value>true</Value>
                         </DefaultValues>
@@ -213,31 +125,15 @@
                     <AttributeSchema name="VirJDBCTransformHashAlgorithm"
                                      type="single"
                                      syntax="string"
-                                     i18nKey="a112">
+                                     i18nKey="a104">
                         <DefaultValues>
                             <Value>SHA-1</Value>
-                        </DefaultValues>
-                    </AttributeSchema>
-                    <AttributeSchema name="VirJDBCStatement"
-                                     type="single"
-                                     syntax="string"
-                                     i18nKey="a107">
-                        <DefaultValues>
-                            <Value>select usr_password,usr_salt from users where usr_screen_name = ?</Value>
-                        </DefaultValues>
-                    </AttributeSchema>
-                    <AttributeSchema name="VirJDBCPasswordSyntaxTransformPlugin"
-                                     type="single"
-                                     syntax="string"
-                                     i18nKey="a108">
-                        <DefaultValues>
-                            <Value>hu.sch.vir.auth.password.HashTransform</Value>
                         </DefaultValues>
                     </AttributeSchema>
                     <AttributeSchema name="iplanet-am-auth-virjdbc-auth-level"
                                      type="single"
                                      syntax="number_range" rangeStart="0" rangeEnd="2147483647"
-                                     i18nKey="a109">
+                                     i18nKey="a105">
                         <DefaultValues>
                             <Value>0</Value>
                         </DefaultValues>
