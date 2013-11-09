@@ -70,7 +70,7 @@ public class VirJDBC extends AMLoginModule {
     private static final String JNDINAME_OPT = "VirJDBCJndiName";
     private static final String PASSWORD_COLUMN_OPT = "VirJDBCPasswordColumn";
     private static final String AUTHLEVEL_OPT = "iplanet-am-auth-virjdbc-auth-level";
-    private static final String STATEMENT = "select usr_password,usr_salt from users where usr_screen_name = ?";
+    private static final String STATEMENT = "select usr_password,usr_salt from users where LOWER(usr_screen_name) = ?";
     private static final String TRANSFORM = "hu.sch.vir.auth.password.HashTransform";
     private Map sharedState;
     private boolean getCredentialsFromSharedState = false;
@@ -266,7 +266,7 @@ public class VirJDBC extends AMLoginModule {
 
         Map<String, Object> mapResult = new HashMap<>();
         try (PreparedStatement thisStatement = database.prepareStatement(STATEMENT)) {
-            thisStatement.setString(1, userName);
+            thisStatement.setString(1, userName.toLowerCase());
             if (debug.messageEnabled()) {
                 debug.message("Statement to execute: " + thisStatement);
             }
