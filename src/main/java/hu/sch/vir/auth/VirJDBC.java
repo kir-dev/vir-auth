@@ -58,7 +58,6 @@ public class VirJDBC extends AMLoginModule {
     private String userName;
     private String password;
     private String resultPassword;
-    private Map mapResult;
     private char[] passwordCharArray;
     private java.security.Principal userPrincipal = null;
     private String errorMsg = null;
@@ -301,6 +300,8 @@ public class VirJDBC extends AMLoginModule {
         if (userName.length() > MAX_NAME_LENGTH) {
             throw new AuthLoginException(amAuthVirJDBC, "userNameTooLong", null);
         }
+
+        Map mapResult = null;
         Connection database = null;
         PreparedStatement thisStatement = null;
         ResultSet results = null;
@@ -411,41 +412,8 @@ public class VirJDBC extends AMLoginModule {
             }
         }
 
-        try {
-            // Attempt to load the transforms constructor
-            // that accepts a JDBCTransformParams instance.
-            // If not found, use empty constructor.
-            JDBCPasswordSyntaxTransform syntaxTransform;
-            final Class classTransform = Class.forName(transform);
-            Constructor ctr = null;
-            try {
-                ctr = classTransform.getConstructor(
-                        JDBCTransformParams.class);
-            } catch (Exception ignored) {
-            }
-            if (ctr != null) {
-                final JDBCTransformParams transformParams =
-                        new JDBCTransformParams(options, mapResult);
-                syntaxTransform = (JDBCPasswordSyntaxTransform) ctr.newInstance(new Object[]{transformParams});
-            } else {
-                syntaxTransform = (JDBCPasswordSyntaxTransform) classTransform.newInstance();
-            }
+        password = getTransformedPassword(password, mapResult);
 
-            if (debug.messageEnabled()) {
-                debug.message("Got my Transform Object"
-                        + syntaxTransform.toString());
-            }
-            password = syntaxTransform.transform(password);
-
-            if (debug.messageEnabled()) {
-                debug.message("Password transformed by: " + transform);
-            }
-        } catch (Throwable e) {
-            if (debug.messageEnabled()) {
-                debug.message("Syntax Transform Exception:" + e.toString());
-            }
-            throw new AuthLoginException(e);
-        }
         // see if the passwords match
         if (password != null && password.equals(resultPassword)) {
             userTokenId = userName;
@@ -455,6 +423,49 @@ public class VirJDBC extends AMLoginModule {
             setFailureID(userName);
             throw new InvalidPasswordException(amAuthVirJDBC, "loginFailed",
                     null, userName, null);
+        }
+    }
+
+    private String getTransformedPassword(final String plainPassword, final Map mapResult)
+            throws AuthLoginException {
+
+        try {
+            // Attempt to load the transforms constructor
+            // that accepts a JDBCTransformParams instance.
+            // If not found, use empty constructor.
+            final Class classTransform = Class.forName(transform);
+            Constructor ctr = null;
+            try {
+                ctr = classTransform.getConstructor(
+                        JDBCTransformParams.class);
+            } catch (NoSuchMethodException | SecurityException ignored) {
+            }
+
+            JDBCPasswordSyntaxTransform syntaxTransform;
+            if (ctr != null) {
+                final JDBCTransformParams transformParams
+                        = new JDBCTransformParams(options, mapResult);
+                syntaxTransform = (JDBCPasswordSyntaxTransform) ctr.newInstance(new Object[]{transformParams});
+            } else {
+                syntaxTransform = (JDBCPasswordSyntaxTransform) classTransform.newInstance();
+            }
+
+            if (debug.messageEnabled()) {
+                debug.message("Got my Transform Object" + syntaxTransform.toString());
+            }
+
+            final String transformedPassword = syntaxTransform.transform(plainPassword);
+
+            if (debug.messageEnabled()) {
+                debug.message("Password transformed: " + transformedPassword);
+            }
+
+            return transformedPassword;
+        } catch (Exception e) {
+            if (debug.messageEnabled()) {
+                debug.message("Syntax Transform Exception:" + e.toString());
+            }
+            throw new AuthLoginException(e);
         }
     }
 
@@ -493,7 +504,6 @@ public class VirJDBC extends AMLoginModule {
         errorMsg = null;
         bundle = null;
         options = null;
-        mapResult = null;
         driver = null;
         connectionType = null;
         jndiName = null;
