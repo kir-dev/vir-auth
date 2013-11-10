@@ -499,9 +499,10 @@ public class VirJDBC extends AMLoginModule {
     private void setMembershipSessionProperties(final Map<String, Object> userRecord)
             throws AuthLoginException {
 
-        try {
-            final String entitlementStr = getEntitlementString(getDatabaseConnection(),
-                    Long.valueOf(String.valueOf(userRecord.get(COL_VIRID)))).toString();
+        try (Connection database = getDatabaseConnection()) {
+
+            final String entitlementStr = getEntitlementString(database,
+                    Long.valueOf(String.valueOf(userRecord.get(COL_VIRID))));
 
             if (debug.messageEnabled()) {
                 debug.message(PROP_ENTITLEMENT_V1 + "=" + entitlementStr);
@@ -517,7 +518,7 @@ public class VirJDBC extends AMLoginModule {
         }
     }
 
-    private StringBuilder getEntitlementString(final Connection connection, final Long virid)
+    private String getEntitlementString(final Connection connection, final Long virid)
             throws SQLException {
 
         final StringBuilder entitlementStr;
@@ -548,7 +549,7 @@ public class VirJDBC extends AMLoginModule {
             }
         }
 
-        return entitlementStr;
+        return entitlementStr.toString();
     }
 
     private void mapToEntitlement(final StringBuilder sb, final int groupId,
