@@ -33,6 +33,7 @@ import com.sun.identity.authentication.spi.AMLoginModule;
 import com.sun.identity.authentication.spi.AuthLoginException;
 import com.sun.identity.authentication.spi.InvalidPasswordException;
 import com.sun.identity.authentication.util.ISAuthConstants;
+import hu.sch.vir.auth.password.HashTransform;
 import java.lang.reflect.Constructor;
 
 import java.sql.Connection;
@@ -41,9 +42,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -67,14 +71,13 @@ public class VirJDBC extends AMLoginModule {
     private ResourceBundle bundle = null;
     private Map<String, Object> options;
     private String jndiName;
-    private String passwordColumn;
     private Map sharedState;
     private boolean getCredentialsFromSharedState = false;
     private static final int MAX_NAME_LENGTH = 80;
     //config options
     private static final String JNDINAME_OPT = "VirJDBCJndiName";
-    private static final String PASSWORD_COLUMN_OPT = "VirJDBCPasswordColumn";
     private static final String AUTHLEVEL_OPT = "iplanet-am-auth-virjdbc-auth-level";
+    private static final String USED_ALGORITHM = "SHA-1";
     private static final String TRANSFORM = "hu.sch.vir.auth.password.HashTransform";
     //queries
     private static final String GET_USER_DATA_STMT = "select usr_password,usr_salt, "
@@ -85,6 +88,8 @@ public class VirJDBC extends AMLoginModule {
     //user columns
     private static final String COL_UID = "usr_screen_name";
     private static final String COL_VIRID = "usr_id";
+    private static final String COL_PASSWORD = "usr_password";
+    private static final String COL_PW_SALT = "usr_salt";
     private static final String COL_EMAIL = "usr_email";
     private static final String COL_FIRSTNAME = "usr_firstname";
     private static final String COL_LASTNAME = "usr_lastname";
@@ -176,19 +181,6 @@ public class VirJDBC extends AMLoginModule {
                 }
 
                 // and get the props that apply to both connection types
-                passwordColumn = CollectionHelper.getMapAttr(
-                        options, PASSWORD_COLUMN_OPT);
-                if (passwordColumn == null) {
-                    debug.message("No PASSWORDCOLUMN for configuring");
-                    errorMsg = "noPASSWORDCOLUMN";
-                    return;
-                } else {
-                    if (debug.messageEnabled()) {
-                        debug.message("Found config for PASSWORDCOLUMN: "
-                                + passwordColumn);
-                    }
-                }
-
                 if (debug.messageEnabled()) {
                     debug.message("Plugin for TRANSFORM: " + TRANSFORM);
                 }
@@ -292,7 +284,7 @@ public class VirJDBC extends AMLoginModule {
                 }
 
                 userRecord = loadUser(database);
-                resultPassword = String.valueOf(userRecord.get(passwordColumn));
+                resultPassword = String.valueOf(userRecord.get(COL_PASSWORD));
 
                 transformedPassword = getTransformedPassword(givenPassword, userRecord);
             }
@@ -407,15 +399,23 @@ public class VirJDBC extends AMLoginModule {
 
             JDBCPasswordSyntaxTransform syntaxTransform;
             if (ctr != null) {
+                //setup HashTransform manually, we won't config these in runtime...
+                final Map<String, Set<String>> transformOptions = new HashMap<>();
+
+                transformOptions.put(HashTransform.ALGORITHM, asSet(USED_ALGORITHM));
+                transformOptions.put(HashTransform.SALTCOLUMN, asSet(COL_PW_SALT));
+                transformOptions.put(HashTransform.SALT_AFTER_PASSWORD,
+                        asSet(Boolean.TRUE.toString()));
+
                 final JDBCTransformParams transformParams
-                        = new JDBCTransformParams(options, mapResult);
+                        = new JDBCTransformParams(transformOptions, mapResult);
                 syntaxTransform = (JDBCPasswordSyntaxTransform) ctr.newInstance(new Object[]{transformParams});
             } else {
                 syntaxTransform = (JDBCPasswordSyntaxTransform) classTransform.newInstance();
             }
 
             if (debug.messageEnabled()) {
-                debug.message("Got my Transform Object" + syntaxTransform.toString());
+                debug.message("Got my Transform Object: " + syntaxTransform.toString());
             }
 
             final String transformedPassword = syntaxTransform.transform(plainPassword);
@@ -635,5 +635,24 @@ public class VirJDBC extends AMLoginModule {
             }
             throw new AuthLoginException(e);
         }
+    }
+
+    /**
+     * Creates an <i>immutable</i> {@code HashSet} instance containing the given
+     * elements in unspecified order.
+     *
+     * @param <E>
+     * @param elements the elements that the set should contain
+     * @return a new {@code HashSet} containing those elements (minus
+     * duplicates)
+     */
+    public static <E> Set<E> asSet(final E... elements) {
+        if (elements == null) {
+            return new HashSet<>(0);
+        }
+
+        final Set<E> set = new HashSet<>(elements.length);
+        Collections.addAll(set, elements);
+        return Collections.unmodifiableSet(set);
     }
 }

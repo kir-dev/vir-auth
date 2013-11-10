@@ -42,13 +42,11 @@ import org.apache.commons.codec.binary.Base64;
  */
 public class HashTransform implements JDBCPasswordSyntaxTransform {
 
-    private static Debug debug = Debug.getInstance(VirJDBC.amAuthVirJDBC);
-    //package protected fields so we can use them in our tests
-    static String SALTCOLUMN = "VirJDBCSaltColumn";
+    private static final Debug debug = Debug.getInstance(VirJDBC.amAuthVirJDBC);
     //
-    static String SALT_AFTER_PASSWORD = "VirJDBCSaltAfterPassword";
-    //
-    static String ALGORITHM = "VirJDBCTransformHashAlgorithm";
+    public static final String SALTCOLUMN = "VirJDBCSaltColumn";
+    public static final String SALT_AFTER_PASSWORD = "VirJDBCSaltAfterPassword";
+    public static final String ALGORITHM = "VirJDBCTransformHashAlgorithm";
     //
     static final String DEFAULT_ALGORITHM = "SHA-256";
     //

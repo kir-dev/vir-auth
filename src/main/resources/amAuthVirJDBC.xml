@@ -49,42 +49,10 @@
                         <Value>java:comp/env/jdbc/sch</Value>
                     </DefaultValues>
                 </AttributeSchema>
-                <AttributeSchema name="VirJDBCPasswordColumn"
-                                 type="single"
-                                 syntax="string"
-                                 i18nKey="a101">
-                    <DefaultValues>
-                        <Value>usr_password</Value>
-                    </DefaultValues>
-                </AttributeSchema>
-                <AttributeSchema name="VirJDBCSaltColumn"
-                                 type="single"
-                                 syntax="string"
-                                 i18nKey="a102">
-                    <DefaultValues>
-                        <Value>usr_salt</Value>
-                    </DefaultValues>
-                </AttributeSchema>
-                <AttributeSchema name="VirJDBCSaltAfterPassword"
-                                 type="single"
-                                 syntax="boolean"
-                                 i18nKey="a103">
-                    <DefaultValues>
-                        <Value>true</Value>
-                    </DefaultValues>
-                </AttributeSchema>
-                <AttributeSchema name="VirJDBCTransformHashAlgorithm"
-                                 type="single"
-                                 syntax="string"
-                                 i18nKey="a104">
-                    <DefaultValues>
-                        <Value>SHA-1</Value>
-                    </DefaultValues>
-                </AttributeSchema>
                 <AttributeSchema name="iplanet-am-auth-virjdbc-auth-level"
                                  type="single"
                                  syntax="number_range" rangeStart="0" rangeEnd="2147483647"
-                                 i18nKey="a105">
+                                 i18nKey="a101">
                     <DefaultValues>
                         <Value>0</Value>
                     </DefaultValues>
@@ -98,42 +66,10 @@
                             <Value>java:comp/env/jdbc/sch</Value>
                         </DefaultValues>
                     </AttributeSchema>
-                    <AttributeSchema name="VirJDBCPasswordColumn"
-                                     type="single"
-                                     syntax="string"
-                                     i18nKey="a101">
-                        <DefaultValues>
-                            <Value>usr_password</Value>
-                        </DefaultValues>
-                    </AttributeSchema>
-                    <AttributeSchema name="VirJDBCSaltColumn"
-                                     type="single"
-                                     syntax="string"
-                                     i18nKey="a102">
-                        <DefaultValues>
-                            <Value>usr_salt</Value>
-                        </DefaultValues>
-                    </AttributeSchema>
-                    <AttributeSchema name="VirJDBCSaltAfterPassword"
-                                     type="single"
-                                     syntax="boolean"
-                                     i18nKey="a103">
-                        <DefaultValues>
-                            <Value>true</Value>
-                        </DefaultValues>
-                    </AttributeSchema>
-                    <AttributeSchema name="VirJDBCTransformHashAlgorithm"
-                                     type="single"
-                                     syntax="string"
-                                     i18nKey="a104">
-                        <DefaultValues>
-                            <Value>SHA-1</Value>
-                        </DefaultValues>
-                    </AttributeSchema>
                     <AttributeSchema name="iplanet-am-auth-virjdbc-auth-level"
                                      type="single"
                                      syntax="number_range" rangeStart="0" rangeEnd="2147483647"
-                                     i18nKey="a105">
+                                     i18nKey="a101">
                         <DefaultValues>
                             <Value>0</Value>
                         </DefaultValues>
