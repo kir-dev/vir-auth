@@ -31,8 +31,34 @@
     <description>Fork of the official JDBC auth module of OpenAM, developed for the VIR SSO</description>
     <groupId>hu.sch</groupId>
     <artifactId>openam-auth-vir-jdbc</artifactId>
-    <version>2.0</version>
+    <version>2.0-SNAPSHOT</version>
     <packaging>jar</packaging>
+    <inceptionYear>2013</inceptionYear>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <organization>
+        <name>Kir-Dev</name>
+        <url>https://kir-dev.sch.bme.hu</url>
+    </organization>
+
+    <issueManagement>
+        <system>Github</system>
+        <url>https://github.com/kir-dev/korok/issues</url>
+    </issueManagement>
+
+    <scm>
+        <connection>scm:git:https://github.com/kir-dev/vir-auth.git</connection>
+        <developerConnection>scm:git:git@github.com:kir-dev/vir-auth.git</developerConnection>
+        <url>https://github.com/kir-dev/vir-auth</url>
+        <tag>HEAD</tag>
+    </scm>
 
     <repositories>
         <!-- ForgeRock Internal Project Repository -->
@@ -134,6 +160,11 @@
                         <arg>-Xlint</arg>
                     </compilerArgs>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.4.1</version>
             </plugin>
         </plugins>
     </build>
