@@ -234,6 +234,9 @@ public class VirJDBC extends AMLoginModule {
     @Override
     public int process(final Callback[] callbacks, final int state)
             throws AuthLoginException {
+
+        final long processTimeBegin = System.currentTimeMillis();
+
         // return if this module is already done
         if (errorMsg != null) {
             throw new AuthLoginException(amAuthVirJDBC, errorMsg, null);
@@ -311,6 +314,10 @@ public class VirJDBC extends AMLoginModule {
             updateLastLoginTime(userRecord);
             userTokenId = userName;
             storeUsernamePasswd(userName, givenPassword);
+
+            final long runningTime = System.currentTimeMillis() - processTimeBegin;
+            debug.warning("the process() method ran " + runningTime + " ms");
+
             return ISAuthConstants.LOGIN_SUCCEED;
         } else {
             debug.message("password not match. Auth failed.");
