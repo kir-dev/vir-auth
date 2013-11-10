@@ -40,6 +40,7 @@ import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -109,6 +110,10 @@ public class VirJDBC extends AMLoginModule {
     private static final String COL_GROUP_ID = "grp_id";
     private static final String COL_GROUP_NAME = "grp_name";
     private static final String COL_POST_NAME = "pttip_name";
+    //
+    private static final String UPDATE_LASTLOGIN_STMT = "UPDATE users "
+            + "SET usr_lastlogin=NOW() "
+            + "WHERE usr_id = ?";
     //session properties
     private static final String PROP_UID = "am.protected.uid";
     private static final String PROP_VIRID = "am.protected.schacPersonalUniqueId";
@@ -303,6 +308,7 @@ public class VirJDBC extends AMLoginModule {
         if (transformedPassword != null && transformedPassword.equals(resultPassword)) {
             setUserSessionProperties(userRecord);
             setMembershipSessionProperties(userRecord);
+            updateLastLoginTime(userRecord);
             userTokenId = userName;
             storeUsernamePasswd(userName, givenPassword);
             return ISAuthConstants.LOGIN_SUCCEED;
@@ -596,5 +602,31 @@ public class VirJDBC extends AMLoginModule {
         sb.append(groupName);
         sb.append(URN_SEPARATOR);
         sb.append(groupId);
+    }
+
+    /**
+     * Updates the user's last login attribute in the database.
+     *
+     * @param userRecord
+     * @throws AuthLoginException
+     */
+    private void updateLastLoginTime(final Map<String, Object> userRecord)
+            throws AuthLoginException {
+
+        try (Connection conn = getDatabaseConnection()) {
+            try (PreparedStatement stmt = conn.prepareStatement(UPDATE_LASTLOGIN_STMT)) {
+                stmt.setObject(1, userRecord.get(COL_VIRID), Types.BIGINT);
+
+                final int updatedRows = stmt.executeUpdate();
+                if (debug.messageEnabled()) {
+                    debug.message("Update lastlogin time, updated rows=" + updatedRows);
+                }
+            }
+        } catch (NamingException | SQLException e) {
+            if (debug.messageEnabled()) {
+                debug.message("JDBC Exception:", e);
+            }
+            throw new AuthLoginException(e);
+        }
     }
 }
