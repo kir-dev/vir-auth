@@ -63,6 +63,7 @@
 
     <properties>
         <openam.version>11.0.0</openam.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencies>
@@ -129,6 +130,9 @@
                 <configuration>
                     <source>1.7</source>
                     <target>1.7</target>
+                    <compilerArgs>
+                        <arg>-Xlint</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
         </plugins>
