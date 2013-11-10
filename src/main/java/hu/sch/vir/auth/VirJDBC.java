@@ -117,7 +117,8 @@ public class VirJDBC extends AMLoginModule {
     private static final String PROP_FIRSTNAME = "am.protected.givenName";
     private static final String PROP_LASTNAME = "am.protected.sn";
     private static final String PROP_FULLNAME = "am.protected.cn";
-    private static final String PROP_NICK = "am.protected.displayName";
+    private static final String PROP_DISPLAY_NAME = "am.protected.displayName";
+    private static final String PROP_NICK = "am.protected.eduPersonNickName";
     private static final String PROP_ROOM = "am.protected.roomNumber";
     private static final String PROP_ENTITLEMENT_V1 = "eduPersonEntitlement";
     private static final String PROP_ENTITLEMENT_V2 = "am.protected.eduPersonEntitlement";
@@ -499,6 +500,7 @@ public class VirJDBC extends AMLoginModule {
         setUserSessionProperty(PROP_LASTNAME, lastName);
         setUserSessionProperty(PROP_FIRSTNAME, firstName);
         setUserSessionProperty(PROP_FULLNAME, fullName);
+        setUserSessionProperty(PROP_DISPLAY_NAME, fullName);
         setUserSessionProperty(PROP_NICK, nickname);
         setUserSessionProperty(PROP_ROOM, dormitory + " " + room);
     }
