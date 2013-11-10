@@ -216,7 +216,7 @@ public class VirJDBC extends AMLoginModule {
     }
 
     /**
-     * Processes the authentication request.
+     * Processes the authentication request and sets session attributes.
      *
      * @param callbacks
      * @param state
@@ -457,7 +457,14 @@ public class VirJDBC extends AMLoginModule {
         sharedState = null;
     }
 
-    private void setUserSessionProperties(final Map<String, Object> userRecord) throws AuthLoginException {
+    /**
+     * Sets the user's attributes to the session from the given map.
+     *
+     * @param userRecord
+     * @throws AuthLoginException if the user session is invalid
+     */
+    private void setUserSessionProperties(final Map<String, Object> userRecord)
+            throws AuthLoginException {
 
         final String virid = String.valueOf(userRecord.get(COL_VIRID));
         final String uid = String.valueOf(userRecord.get(COL_UID));
@@ -496,6 +503,12 @@ public class VirJDBC extends AMLoginModule {
         setUserSessionProperty(PROP_ROOM, dormitory + " " + room);
     }
 
+    /**
+     * Sets the entitlement attribute to the session.
+     *
+     * @param userRecord
+     * @throws AuthLoginException if the db fails or the user session is invalid
+     */
     private void setMembershipSessionProperties(final Map<String, Object> userRecord)
             throws AuthLoginException {
 
@@ -518,6 +531,16 @@ public class VirJDBC extends AMLoginModule {
         }
     }
 
+    /**
+     * Queries the memberships from the database and assembles the full
+     * entitlement string.
+     *
+     * @param connection database connection. The method doesn't close this
+     * connection
+     * @param virid unique id of the user in the database
+     * @return full entitlement string
+     * @throws SQLException
+     */
     private String getEntitlementString(final Connection connection, final Long virid)
             throws SQLException {
 
@@ -552,6 +575,16 @@ public class VirJDBC extends AMLoginModule {
         return entitlementStr.toString();
     }
 
+    /**
+     * Appends the group's entitlement part to the given full entitlement
+     * StringBuilder. Format of one entitlement:<br/>
+     * <pre>urn:geant:niif.hu:sch.bme.hu:entitlement:gazdaságis:KIR fejlesztők és üzemeltetők:106</pre>
+     *
+     * @param sb StringBuilder of the entitlement string
+     * @param groupId
+     * @param groupName
+     * @param entitlementType
+     */
     private void mapToEntitlement(final StringBuilder sb, final int groupId,
             final String groupName, final String entitlementType) {
 
