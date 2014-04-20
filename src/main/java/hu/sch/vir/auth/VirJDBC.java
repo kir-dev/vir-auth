@@ -25,20 +25,22 @@
  */
 package hu.sch.vir.auth;
 
-import hu.sch.vir.auth.password.JDBCTransformParams;
-import hu.sch.vir.auth.password.JDBCPasswordSyntaxTransform;
-import com.sun.identity.shared.debug.Debug;
-import com.sun.identity.shared.datastruct.CollectionHelper;
 import com.sun.identity.authentication.spi.AMLoginModule;
 import com.sun.identity.authentication.spi.AuthLoginException;
 import com.sun.identity.authentication.spi.InvalidPasswordException;
 import com.sun.identity.authentication.util.ISAuthConstants;
+import com.sun.identity.shared.datastruct.CollectionHelper;
+import com.sun.identity.shared.debug.Debug;
+import hu.sch.vir.auth.common.Queries;
+import hu.sch.vir.auth.common.VirDbColumns;
+import hu.sch.vir.auth.common.VirSession;
 import hu.sch.vir.auth.password.HashTransform;
+import hu.sch.vir.auth.password.JDBCPasswordSyntaxTransform;
+import hu.sch.vir.auth.password.JDBCTransformParams;
 import java.lang.reflect.Constructor;
-
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -48,7 +50,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
-
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -79,67 +80,6 @@ public class VirJDBC extends AMLoginModule {
     private static final String AUTHLEVEL_OPT = "iplanet-am-auth-virjdbc-auth-level";
     private static final String USED_ALGORITHM = "SHA-1";
     private static final String TRANSFORM = "hu.sch.vir.auth.password.HashTransform";
-    //queries
-    private static final String GET_USER_DATA_STMT = "select usr_password,usr_salt, "
-            + "usr_id, usr_email, usr_firstname, usr_lastname, usr_nickname, "
-            + "usr_screen_name, usr_dormitory, usr_room, usr_student_status "
-            + "from users where LOWER(usr_screen_name) = ?";
-
-    //user columns
-    private static final String COL_UID = "usr_screen_name";
-    private static final String COL_VIRID = "usr_id";
-    private static final String COL_PASSWORD = "usr_password";
-    private static final String COL_PW_SALT = "usr_salt";
-    private static final String COL_EMAIL = "usr_email";
-    private static final String COL_FIRSTNAME = "usr_firstname";
-    private static final String COL_LASTNAME = "usr_lastname";
-    private static final String COL_NICK = "usr_nickname";
-    private static final String COL_DORM = "usr_dormitory";
-    private static final String COL_ROOM = "usr_room";
-    private static final String COL_STUDENT_STATUS = "usr_student_status";
-    //
-    private static final String MEMBERSHIPS_STMT
-            = "SELECT grp_membership.grp_id, groups.grp_name, poszttipus.pttip_name "
-            + "FROM grp_membership JOIN groups USING (grp_id) "
-            + "JOIN poszt ON poszt.grp_member_id = grp_membership.id "
-            + "JOIN poszttipus ON poszt.pttip_id = poszttipus.pttip_id "
-            + "WHERE (grp_membership.usr_id=? AND membership_end is null) "
-            + "UNION "
-            + "(SELECT grp_membership.grp_id, groups.grp_name, 'tag' AS pttip_name "
-            + "FROM grp_membership JOIN groups USING (grp_id) "
-            + "LEFT OUTER JOIN poszt ON poszt.grp_member_id = grp_membership.id "
-            + "WHERE (poszt.pttip_id <> 6 OR poszt.pttip_id IS null) " //members under processing shouldn't get member rights
-            + "AND usr_id = ? AND grp_membership.membership_end IS null) " //active member
-            + "ORDER BY grp_id";
-    //membership columns
-    private static final String COL_GROUP_ID = "grp_id";
-    private static final String COL_GROUP_NAME = "grp_name";
-    private static final String COL_POST_NAME = "pttip_name";
-    //
-    private static final String UPDATE_LASTLOGIN_STMT = "UPDATE users "
-            + "SET usr_lastlogin=NOW() "
-            + "WHERE usr_id = ?";
-    //session properties
-    private static final String PROP_UID = "am.protected.uid";
-    private static final String PROP_VIRID = "am.protected.schacPersonalUniqueId";
-    private static final String PROP_STUDENT_STATUS = "am.protected.schacUserStatus";
-    private static final String PROP_EMAIL = "am.protected.mail";
-    private static final String PROP_FIRSTNAME = "am.protected.givenName";
-    private static final String PROP_LASTNAME = "am.protected.sn";
-    private static final String PROP_FULLNAME = "am.protected.cn";
-    private static final String PROP_DISPLAY_NAME = "am.protected.displayName";
-    private static final String PROP_NICK = "am.protected.eduPersonNickName";
-    private static final String PROP_ROOM = "am.protected.roomNumber";
-    private static final String PROP_ENTITLEMENT_V1 = "eduPersonEntitlement";
-    private static final String PROP_ENTITLEMENT_V2 = "am.protected.eduPersonEntitlement";
-    private static final String ENTITLEMENT_SEPARATOR = "|";
-    private static final String ENTITLEMENT_PREFIX
-            = "urn:geant:niif.hu:sch.bme.hu:entitlement:";
-    private static final String URN_SEPARATOR = ":";
-    private static final String VIRID_PREFIX
-            = "urn:mace:terena.org:schac:personalUniqueID:hu:BME-SCH-VIR:person:";
-    private static final String STUDENT_STATUS_PREFIX
-            = "urn:mace:terena.org:schac:status:sch.hu:student_status:";
     private static final String LBR = "\n";
 
     /**
@@ -280,11 +220,11 @@ public class VirJDBC extends AMLoginModule {
 
                 //Prepare the statement for execution
                 if (debug.messageEnabled()) {
-                    debug.message("PreparedStatement to build: " + GET_USER_DATA_STMT);
+                    debug.message("PreparedStatement to build: " + Queries.GET_USER_DATA_STMT);
                 }
 
                 userRecord = loadUser(database);
-                resultPassword = String.valueOf(userRecord.get(COL_PASSWORD));
+                resultPassword = String.valueOf(userRecord.get(VirDbColumns.PASSWORD.val()));
 
                 transformedPassword = getTransformedPassword(givenPassword, userRecord);
             }
@@ -331,7 +271,7 @@ public class VirJDBC extends AMLoginModule {
     private Map<String, Object> loadUser(final Connection database) throws SQLException, AuthLoginException {
 
         final Map<String, Object> userRecord = new HashMap<>();
-        try (PreparedStatement thisStatement = database.prepareStatement(GET_USER_DATA_STMT)) {
+        try (PreparedStatement thisStatement = database.prepareStatement(Queries.GET_USER_DATA_STMT.val())) {
             thisStatement.setString(1, userName.toLowerCase());
             if (debug.messageEnabled()) {
                 debug.message("Statement to execute: " + thisStatement);
@@ -403,7 +343,7 @@ public class VirJDBC extends AMLoginModule {
                 final Map<String, Set<String>> transformOptions = new HashMap<>();
 
                 transformOptions.put(HashTransform.ALGORITHM, asSet(USED_ALGORITHM));
-                transformOptions.put(HashTransform.SALTCOLUMN, asSet(COL_PW_SALT));
+                transformOptions.put(HashTransform.SALTCOLUMN, asSet(VirDbColumns.PW_SALT.val()));
                 transformOptions.put(HashTransform.SALT_AFTER_PASSWORD,
                         asSet(Boolean.TRUE.toString()));
 
@@ -480,42 +420,39 @@ public class VirJDBC extends AMLoginModule {
     private void setUserSessionProperties(final Map<String, Object> userRecord)
             throws AuthLoginException {
 
-        final String virid = String.valueOf(userRecord.get(COL_VIRID));
-        final String uid = String.valueOf(userRecord.get(COL_UID));
-        final String email = String.valueOf(userRecord.get(COL_EMAIL));
-        final String studentStatus = String.valueOf(userRecord.get(COL_STUDENT_STATUS));
-        final String firstName = String.valueOf(userRecord.get(COL_FIRSTNAME));
-        final String lastName = String.valueOf(userRecord.get(COL_LASTNAME));
-        final String nickname = String.valueOf(userRecord.get(COL_NICK));
-        final String dormitory = String.valueOf(userRecord.get(COL_DORM));
-        final String room = String.valueOf(userRecord.get(COL_ROOM));
+        final String virid = String.valueOf(userRecord.get(VirDbColumns.VIRID.val()));
+        final String uid = String.valueOf(userRecord.get(VirDbColumns.UID.val()));
+        final String email = String.valueOf(userRecord.get(VirDbColumns.EMAIL.val()));
+        final String studentStatus = String.valueOf(userRecord.get(VirDbColumns.STUDENT_STATUS.val()));
+        final String firstName = String.valueOf(userRecord.get(VirDbColumns.FIRSTNAME.val()));
+        final String lastName = String.valueOf(userRecord.get(VirDbColumns.LASTNAME.val()));
+        final String nickname = String.valueOf(userRecord.get(VirDbColumns.NICK.val()));
+        final String dormitory = String.valueOf(userRecord.get(VirDbColumns.DORM.val()));
+        final String room = String.valueOf(userRecord.get(VirDbColumns.ROOM.val()));
         final String fullName = lastName + " " + firstName;
 
         if (debug.messageEnabled()) {
-            final StringBuilder msg = new StringBuilder();
-            msg.append(COL_VIRID).append("=").append(virid).append(LBR);
-            msg.append(COL_EMAIL).append("=").append(email).append(LBR);
-            msg.append(COL_STUDENT_STATUS).append("=").append(studentStatus).append(LBR);
-            msg.append(COL_FIRSTNAME).append("=").append(firstName).append(LBR);
-            msg.append(COL_LASTNAME).append("=").append(lastName).append(LBR);
-            msg.append(PROP_FULLNAME).append("=").append(fullName).append(LBR);
-            msg.append(COL_NICK).append("=").append(nickname).append(LBR);
-            msg.append(COL_DORM).append("=").append(dormitory).append(LBR);
-            msg.append(COL_ROOM).append("=").append(room).append(LBR);
-
-            debug.message(msg.toString());
+            debug.message(VirDbColumns.VIRID + "=" + virid + LBR
+            + VirDbColumns.EMAIL + "=" + email + LBR
+            + VirDbColumns.STUDENT_STATUS + "=" + studentStatus + LBR
+            + VirDbColumns.FIRSTNAME + "=" + firstName + LBR
+            + VirDbColumns.LASTNAME + "=" + lastName + LBR
+            + VirSession.PROP_FULLNAME + "=" + fullName + LBR
+            + VirDbColumns.NICK + "=" + nickname + LBR
+            + VirDbColumns.DORM + "=" + dormitory + LBR
+            + VirDbColumns.ROOM + "=" + room + LBR);
         }
 
-        setUserSessionProperty(PROP_UID, uid);
-        setUserSessionProperty(PROP_VIRID, VIRID_PREFIX + virid);
-        setUserSessionProperty(PROP_EMAIL, email);
-        setUserSessionProperty(PROP_STUDENT_STATUS, STUDENT_STATUS_PREFIX + studentStatus.toLowerCase());
-        setUserSessionProperty(PROP_LASTNAME, lastName);
-        setUserSessionProperty(PROP_FIRSTNAME, firstName);
-        setUserSessionProperty(PROP_FULLNAME, fullName);
-        setUserSessionProperty(PROP_DISPLAY_NAME, fullName);
-        setUserSessionProperty(PROP_NICK, nickname);
-        setUserSessionProperty(PROP_ROOM, dormitory + " " + room);
+        setUserSessionProperty(VirSession.PROP_UID.val(), uid);
+        setUserSessionProperty(VirSession.PROP_VIRID.val(), VirSession.VIRID_PREFIX + virid);
+        setUserSessionProperty(VirSession.PROP_EMAIL.val(), email);
+        setUserSessionProperty(VirSession.PROP_STUDENT_STATUS.val(), VirSession.STUDENT_STATUS_PREFIX + studentStatus.toLowerCase());
+        setUserSessionProperty(VirSession.PROP_LASTNAME.val(), lastName);
+        setUserSessionProperty(VirSession.PROP_FIRSTNAME.val(), firstName);
+        setUserSessionProperty(VirSession.PROP_FULLNAME.val(), fullName);
+        setUserSessionProperty(VirSession.PROP_DISPLAY_NAME.val(), fullName);
+        setUserSessionProperty(VirSession.PROP_NICK.val(), nickname);
+        setUserSessionProperty(VirSession.PROP_ROOM.val(), dormitory + " " + room);
     }
 
     /**
@@ -530,14 +467,14 @@ public class VirJDBC extends AMLoginModule {
         try (Connection database = getDatabaseConnection()) {
 
             final String entitlementStr = getEntitlementString(database,
-                    Long.valueOf(String.valueOf(userRecord.get(COL_VIRID))));
+                    Long.valueOf(String.valueOf(userRecord.get(VirDbColumns.VIRID.val()))));
 
             if (debug.messageEnabled()) {
-                debug.message(PROP_ENTITLEMENT_V1 + "=" + entitlementStr);
+                debug.message(VirSession.PROP_ENTITLEMENT_V1 + "=" + entitlementStr);
             }
 
-            setUserSessionProperty(PROP_ENTITLEMENT_V1, entitlementStr);
-            setUserSessionProperty(PROP_ENTITLEMENT_V2, entitlementStr);
+            setUserSessionProperty(VirSession.PROP_ENTITLEMENT_V1.val(), entitlementStr);
+            setUserSessionProperty(VirSession.PROP_ENTITLEMENT_V2.val(), entitlementStr);
         } catch (NamingException | SQLException e) {
             if (debug.messageEnabled()) {
                 debug.message("JDBC Exception:", e);
@@ -561,7 +498,7 @@ public class VirJDBC extends AMLoginModule {
 
         final StringBuilder entitlementStr;
 
-        try (PreparedStatement stmt = connection.prepareStatement(MEMBERSHIPS_STMT)) {
+        try (PreparedStatement stmt = connection.prepareStatement(Queries.MEMBERSHIPS_STMT.val())) {
 
             stmt.setLong(1, virid);
             stmt.setLong(2, virid);
@@ -571,12 +508,12 @@ public class VirJDBC extends AMLoginModule {
                 while (rs.next()) {
                     //az első elem elé nem kell szeparátor
                     if (!rs.isFirst()) {
-                        entitlementStr.append(ENTITLEMENT_SEPARATOR);
+                        entitlementStr.append(VirSession.ENTITLEMENT_SEPARATOR);
                     }
 
-                    final String groupName = rs.getString(COL_GROUP_NAME);
-                    final int groupId = rs.getInt(COL_GROUP_ID);
-                    final String post = rs.getString(COL_POST_NAME);
+                    final String groupName = rs.getString(VirDbColumns.GROUP_NAME.val());
+                    final int groupId = rs.getInt(VirDbColumns.GROUP_ID.val());
+                    final String post = rs.getString(VirDbColumns.POST_NAME.val());
                     mapToEntitlement(entitlementStr, groupId, groupName, post);
 
                     if (debug.messageEnabled()) {
@@ -603,11 +540,11 @@ public class VirJDBC extends AMLoginModule {
     private void mapToEntitlement(final StringBuilder sb, final int groupId,
             final String groupName, final String entitlementType) {
 
-        sb.append(ENTITLEMENT_PREFIX);
+        sb.append(VirSession.ENTITLEMENT_PREFIX);
         sb.append(entitlementType);
-        sb.append(URN_SEPARATOR);
+        sb.append(VirSession.URN_SEPARATOR);
         sb.append(groupName);
-        sb.append(URN_SEPARATOR);
+        sb.append(VirSession.URN_SEPARATOR);
         sb.append(groupId);
     }
 
@@ -621,8 +558,8 @@ public class VirJDBC extends AMLoginModule {
             throws AuthLoginException {
 
         try (Connection conn = getDatabaseConnection()) {
-            try (PreparedStatement stmt = conn.prepareStatement(UPDATE_LASTLOGIN_STMT)) {
-                stmt.setObject(1, userRecord.get(COL_VIRID), Types.BIGINT);
+            try (PreparedStatement stmt = conn.prepareStatement(Queries.UPDATE_LASTLOGIN_STMT.val())) {
+                stmt.setObject(1, userRecord.get(VirDbColumns.VIRID.val()), Types.BIGINT);
 
                 final int updatedRows = stmt.executeUpdate();
                 if (debug.messageEnabled()) {
