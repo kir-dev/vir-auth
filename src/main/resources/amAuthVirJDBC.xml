@@ -2,9 +2,9 @@
 
 <!--
    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
-  
+
     Copyright (c) 2006 Sun Microsystems Inc. All Rights Reserved
-  
+
     The contents of this file are subject to the terms
     of the Common Development and Distribution License
     (the License). You may not use this file except in
@@ -41,14 +41,6 @@
             i18nKey="amAuthVirJDBCServiceDescription">
 
             <Organization>
-                <AttributeSchema name="VirJDBCJndiName"
-                                 type="single"
-                                 syntax="string"
-                                 i18nKey="a100">
-                    <DefaultValues>
-                        <Value>java:comp/env/jdbc/sch</Value>
-                    </DefaultValues>
-                </AttributeSchema>
                 <AttributeSchema name="iplanet-am-auth-virjdbc-auth-level"
                                  type="single"
                                  syntax="number_range" rangeStart="0" rangeEnd="2147483647"
@@ -58,14 +50,6 @@
                     </DefaultValues>
                 </AttributeSchema>
                 <SubSchema name="serverconfig" inheritance="multiple">
-                    <AttributeSchema name="VirJDBCJndiName"
-                                     type="single"
-                                     syntax="string"
-                                     i18nKey="a100">
-                        <DefaultValues>
-                            <Value>java:comp/env/jdbc/sch</Value>
-                        </DefaultValues>
-                    </AttributeSchema>
                     <AttributeSchema name="iplanet-am-auth-virjdbc-auth-level"
                                      type="single"
                                      syntax="number_range" rangeStart="0" rangeEnd="2147483647"
