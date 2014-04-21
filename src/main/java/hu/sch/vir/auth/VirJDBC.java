@@ -31,6 +31,7 @@ import com.sun.identity.authentication.spi.InvalidPasswordException;
 import com.sun.identity.authentication.util.ISAuthConstants;
 import com.sun.identity.shared.datastruct.CollectionHelper;
 import com.sun.identity.shared.debug.Debug;
+import hu.sch.vir.auth.common.Helpers;
 import hu.sch.vir.auth.common.VirDb;
 import hu.sch.vir.auth.common.VirDbColumns;
 import hu.sch.vir.auth.common.VirSession;
@@ -237,10 +238,10 @@ public class VirJDBC extends AMLoginModule {
                 //setup HashTransform manually, we won't config these in runtime...
                 final Map<String, Set<String>> transformOptions = new HashMap<>();
 
-                transformOptions.put(HashTransform.ALGORITHM, asSet(USED_ALGORITHM));
-                transformOptions.put(HashTransform.SALTCOLUMN, asSet(VirDbColumns.PW_SALT.val()));
+                transformOptions.put(HashTransform.ALGORITHM, Helpers.asSet(VirJDBC.USED_ALGORITHM));
+                transformOptions.put(HashTransform.SALTCOLUMN, Helpers.asSet(VirDbColumns.PW_SALT.val()));
                 transformOptions.put(HashTransform.SALT_AFTER_PASSWORD,
-                        asSet(Boolean.TRUE.toString()));
+                        Helpers.asSet(Boolean.TRUE.toString()));
 
                 final JDBCTransformParams transformParams
                         = new JDBCTransformParams(transformOptions, virDb.getUserRecord());
@@ -366,22 +367,4 @@ public class VirJDBC extends AMLoginModule {
       setUserSessionProperty(VirSession.PROP_ENTITLEMENT_V2.val(), entitlementStr);
     }
 
-    /**
-     * Creates an <i>immutable</i> {@code HashSet} instance containing the given
-     * elements in unspecified order.
-     *
-     * @param <E>
-     * @param elements the elements that the set should contain
-     * @return a new {@code HashSet} containing those elements (minus
-     * duplicates)
-     */
-    public static <E> Set<E> asSet(final E... elements) {
-        if (elements == null) {
-            return new HashSet<>(0);
-        }
-
-        final Set<E> set = new HashSet<>(elements.length);
-        Collections.addAll(set, elements);
-        return Collections.unmodifiableSet(set);
-    }
 }
