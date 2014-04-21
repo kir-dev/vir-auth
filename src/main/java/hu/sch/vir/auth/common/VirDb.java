@@ -30,6 +30,11 @@ public class VirDb implements AutoCloseable {
   private final Map<String, Object> userRecord;
 
   public VirDb(String userName, Debug debug) throws AuthLoginException {
+    if (userName == null || userName.isEmpty()) {
+      throw new AuthLoginException(VirJDBC.amAuthVirJDBC,
+              ErrorCode.NULL_RESULT.toString(), null);
+    }
+
     this.debug = debug;
     this.userName = userName;
 
