@@ -107,7 +107,7 @@ public class VirDb implements AutoCloseable {
         }
         if (index == 0) {
           debugMsg("No results from your SQL query. UID should be valid");
-          throw new AuthLoginException(VirJDBC.amAuthVirJDBC, "nullResult", null);
+          throw new AuthLoginException(VirJDBC.amAuthVirJDBC, ErrorCode.NULL_RESULT.toString(), null);
         }
       }
     } catch (NamingException | SQLException ex) {
