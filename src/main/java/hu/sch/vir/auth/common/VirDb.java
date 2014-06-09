@@ -46,7 +46,9 @@ public class VirDb implements AutoCloseable {
   }
 
   public String getUserDataAsString(VirDbColumns column) {
-    return String.valueOf(getUserData(column));
+    final String val = String.valueOf(getUserData(column));
+
+    return val.equals("null") ? "" : val;
   }
 
   public Long getUserDataAsLong(VirDbColumns column) {

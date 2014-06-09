@@ -21,7 +21,7 @@ import org.json.JSONObject;
  */
 public class VirAttributeMapper implements AttributeMapper {
 
-  private static final String OAUTH_ATTR_LINKED_ACCOUNTS = "linkedAccounts";
+  private static final String OAUTH_LEGACY_VIR_FIELD = "legacyVir";
 
   @Override
   public Map<String, Set<String>> getAttributes(Set<String> attributeMapConfiguration,
@@ -33,6 +33,8 @@ public class VirAttributeMapper implements AttributeMapper {
     final Map<String, Set<String>> attr = new HashMap<>();
     attr.putAll(getAttributesFromConfig(attributeMapConfiguration, json));
     attr.putAll(getAttributesFromDb(json));
+
+    OAuthUtil.debugMessage("virAttributeMapper: final attributes=" + attr);
 
     return attr;
   }
@@ -103,13 +105,15 @@ public class VirAttributeMapper implements AttributeMapper {
     final Map<String, Set<String>> attr = new HashMap<>();
 
     try {
-      final JSONObject linkedAccounts = json.getJSONObject(OAUTH_ATTR_LINKED_ACCOUNTS);
-      final String virUserName = linkedAccounts.getString("vir");
+      final String virUserName = json.getString(OAUTH_LEGACY_VIR_FIELD);
 
       try (VirDb virdb = new VirDb(virUserName, null)) {
 
         attr.put(VirSession.PROP_VIRID.val(),
-                Helpers.asSet(virdb.getUserDataAsString(VirDbColumns.VIRID)));
+                Helpers.asSet(
+                        VirSession.VIRID_PREFIX
+                        + virdb.getUserDataAsString(VirDbColumns.VIRID))
+        );
 
         attr.put(VirSession.PROP_UID.val(),
                 Helpers.asSet(virdb.getUserDataAsString(VirDbColumns.UID)));
@@ -120,8 +124,11 @@ public class VirAttributeMapper implements AttributeMapper {
         addIfExists(attr, VirSession.PROP_NICK,
                 virdb.getUserDataAsString(VirDbColumns.NICK));
 
-        addIfExists(attr, VirSession.PROP_STUDENT_STATUS,
-                virdb.getUserDataAsString(VirDbColumns.STUDENT_STATUS));
+        attr.put(VirSession.PROP_STUDENT_STATUS.val(),
+                Helpers.asSet(
+                        VirSession.STUDENT_STATUS_PREFIX
+                        + virdb.getUserDataAsString(VirDbColumns.STUDENT_STATUS).toLowerCase()
+                ));
 
         addIfExists(attr, VirSession.PROP_ROOM, getRoomString(virdb));
 
@@ -133,6 +140,7 @@ public class VirAttributeMapper implements AttributeMapper {
       } catch (AuthLoginException ex) {
         if (ErrorCode.NULL_RESULT.toString().equalsIgnoreCase(ex.getErrorCode())) {
           //no vir user
+          OAuthUtil.debugWarning("Login without vir user. JSON=" + json.toString());
         } else {
           throw new AuthLoginException(ex);
         }
@@ -140,7 +148,7 @@ public class VirAttributeMapper implements AttributeMapper {
 
     } catch (JSONException ex) {
       OAuthUtil.debugError("virAttributeMapper.getAttributes: Could not "
-              + "process the attribute: " + OAUTH_ATTR_LINKED_ACCOUNTS, ex);
+              + "process the attribute: " + OAUTH_LEGACY_VIR_FIELD, ex);
     }
 
     return attr;
