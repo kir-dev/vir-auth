@@ -148,6 +148,8 @@ public class VirAttributeMapper implements AttributeMapper {
     } catch (JSONException ex) {
       OAuthUtil.debugError("virAttributeMapper.getAttributes: Could not "
               + "process the attribute: " + OAUTH_LEGACY_VIR_FIELD, ex);
+
+      throw new AuthLoginException(ex);
     }
 
     return attr;
