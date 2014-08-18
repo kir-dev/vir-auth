@@ -139,11 +139,10 @@ public class VirAttributeMapper implements AttributeMapper {
 
       } catch (AuthLoginException ex) {
         if (ErrorCode.NULL_RESULT.toString().equalsIgnoreCase(ex.getErrorCode())) {
-          //no vir user
           OAuthUtil.debugWarning("Login without vir user. JSON=" + json.toString());
-        } else {
-          throw new AuthLoginException(ex);
         }
+
+        throw new AuthLoginException(ex);
       }
 
     } catch (JSONException ex) {
