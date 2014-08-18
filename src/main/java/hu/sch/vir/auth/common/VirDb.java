@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.naming.Context;
@@ -25,8 +26,7 @@ public class VirDb implements AutoCloseable {
 
   private static final String JNDI_NAME = "java:comp/env/jdbc/sch";
   private Debug debug = null;
-  private Connection conn;
-  private final String userName;
+  private final Connection conn;
   private final Map<String, Object> userRecord;
 
   public VirDb(String userName, Debug debug) throws AuthLoginException {
@@ -36,7 +36,12 @@ public class VirDb implements AutoCloseable {
     }
 
     this.debug = debug;
-    this.userName = userName;
+    try {
+      conn = getJndiConnection();
+    } catch (NamingException | SQLException ex) {
+      debugMsg("Couldn't get database connection");
+      throw new AuthLoginException(ex);
+    }
 
     userRecord = loadUser(userName);
   }
@@ -53,19 +58,6 @@ public class VirDb implements AutoCloseable {
 
   public Long getUserDataAsLong(VirDbColumns column) {
     return Long.valueOf(getUserDataAsString(column));
-  }
-
-  private Connection getConn() throws NamingException, SQLException {
-
-    if (conn == null || !conn.isValid(1000)) {
-      if (conn != null) {
-        close();
-      }
-
-      conn = getJndiConnection();
-    }
-
-    return conn;
   }
 
   private Connection getJndiConnection() throws NamingException, SQLException {
@@ -90,7 +82,7 @@ public class VirDb implements AutoCloseable {
     final Map<String, Object> attrs = new HashMap<>();
     debugMsg("PreparedStatement to build: " + Queries.GET_USER_DATA_STMT);
 
-    try (PreparedStatement userDataStmt = getConn().prepareStatement(Queries.GET_USER_DATA_STMT.val())) {
+    try (PreparedStatement userDataStmt = conn.prepareStatement(Queries.GET_USER_DATA_STMT.val())) {
       userDataStmt.setString(1, userName.toLowerCase());
 
       try (ResultSet results = userDataStmt.executeQuery()) {
@@ -117,11 +109,11 @@ public class VirDb implements AutoCloseable {
           throw new AuthLoginException(VirJDBC.amAuthVirJDBC, ErrorCode.NULL_RESULT.toString(), null);
         }
       }
-    } catch (NamingException | SQLException ex) {
+    } catch (SQLException ex) {
       throw new AuthLoginException(ex);
     }
 
-    return attrs;
+    return Collections.unmodifiableMap(attrs);
   }
 
   /**
@@ -136,7 +128,7 @@ public class VirDb implements AutoCloseable {
     final StringBuilder entitlementStr;
     final Long virid = getUserDataAsLong(VirDbColumns.VIRID);
 
-    try (PreparedStatement stmt = getConn().prepareStatement(Queries.MEMBERSHIPS_STMT.val())) {
+    try (PreparedStatement stmt = conn.prepareStatement(Queries.MEMBERSHIPS_STMT.val())) {
 
       stmt.setLong(1, virid);
       stmt.setLong(2, virid);
@@ -157,7 +149,7 @@ public class VirDb implements AutoCloseable {
           debugMsg("Entitlement in group: " + groupName + ", post: " + post);
         }
       }
-    } catch (NamingException | SQLException e) {
+    } catch (SQLException e) {
       debugMsg("JDBC Exception:" + e.getMessage());
       throw new AuthLoginException(e);
     }
@@ -193,12 +185,12 @@ public class VirDb implements AutoCloseable {
    */
   public void updateLastLoginTime() throws AuthLoginException {
 
-    try (PreparedStatement stmt = getConn().prepareStatement(Queries.UPDATE_LASTLOGIN_STMT.val())) {
+    try (PreparedStatement stmt = conn.prepareStatement(Queries.UPDATE_LASTLOGIN_STMT.val())) {
       stmt.setObject(1, getUserData(VirDbColumns.VIRID), Types.BIGINT);
 
       final int updatedRows = stmt.executeUpdate();
       debugMsg("Update lastlogin time, updated rows=" + updatedRows);
-    } catch (NamingException | SQLException e) {
+    } catch (SQLException e) {
       debugMsg("JDBC Exception:" + e.getMessage());
       throw new AuthLoginException(e);
     }
