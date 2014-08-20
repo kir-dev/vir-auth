@@ -39,9 +39,7 @@ import hu.sch.vir.auth.password.HashTransform;
 import hu.sch.vir.auth.password.JDBCPasswordSyntaxTransform;
 import hu.sch.vir.auth.password.JDBCTransformParams;
 import java.lang.reflect.Constructor;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -97,8 +95,6 @@ public class VirJDBC extends AMLoginModule {
 
         if (options != null) {
             try {
-                debug.message("Using JNDI Retrieved Connection pool");
-
                 // and get the props that apply to both connection types
                 if (debug.messageEnabled()) {
                     debug.message("Plugin for TRANSFORM: " + TRANSFORM);
