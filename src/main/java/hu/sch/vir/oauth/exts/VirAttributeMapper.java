@@ -1,6 +1,7 @@
 package hu.sch.vir.oauth.exts;
 
 import com.sun.identity.authentication.spi.AuthLoginException;
+import com.sun.identity.shared.debug.Debug;
 import hu.sch.vir.auth.common.ErrorCode;
 import hu.sch.vir.auth.common.Helpers;
 import hu.sch.vir.auth.common.VirDb;
@@ -11,7 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import org.forgerock.openam.authentication.modules.oauth2.AttributeMapper;
-import org.forgerock.openam.authentication.modules.oauth2.OAuthUtil;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -22,19 +22,23 @@ import org.json.JSONObject;
 public class VirAttributeMapper implements AttributeMapper {
 
   private static final String OAUTH_LEGACY_VIR_FIELD = "legacyVir";
+  private static final Debug DEBUG = Debug.getInstance("VirAttributeMapper");
 
   @Override
   public Map<String, Set<String>> getAttributes(Set<String> attributeMapConfiguration,
           String svcProfileResponse) throws AuthLoginException {
-
-    OAuthUtil.debugMessage("virAttributeMapper.getAttributes: " + attributeMapConfiguration);
+    if (DEBUG.messageEnabled()) {
+      DEBUG.message("VirAttributeMapper.getAttributes: " + attributeMapConfiguration);
+    }
 
     final JSONObject json = getJsonResponse(svcProfileResponse);
     final Map<String, Set<String>> attr = new HashMap<>();
     attr.putAll(getAttributesFromConfig(attributeMapConfiguration, json));
     attr.putAll(getAttributesFromDb(json));
 
-    OAuthUtil.debugMessage("virAttributeMapper: final attributes=" + attr);
+    if (DEBUG.messageEnabled()) {
+      DEBUG.message("VirAttributeMapper: final attributes=" + attr);
+    }
 
     return attr;
   }
@@ -58,7 +62,9 @@ public class VirAttributeMapper implements AttributeMapper {
 
       try {
         if (!entry.contains("=")) {
-          OAuthUtil.debugMessage("virAttributeMapper.getAttributes: Invalid entry." + entry);
+          if (DEBUG.messageEnabled()) {
+            DEBUG.message("VirAttributeMapper.getAttributes: Invalid entry." + entry);
+          }
           continue;
         }
 
@@ -66,8 +72,9 @@ public class VirAttributeMapper implements AttributeMapper {
         responseName = st.nextToken();
         String localName = st.nextToken();
 
-        OAuthUtil.debugMessage("virAttributeMapper.getAttributes: "
-                + responseName + ":" + localName);
+        if (DEBUG.messageEnabled()) {
+          DEBUG.message("VirAttributeMapper.getAttributes: " + responseName + ":" + localName);
+        }
 
         String data;
         if (responseName != null && responseName.contains(".")) {
@@ -79,8 +86,7 @@ public class VirAttributeMapper implements AttributeMapper {
 
         attr.put(localName, Helpers.asSet(data));
       } catch (JSONException ex) {
-        OAuthUtil.debugError("virAttributeMapper.getAttributes: Could not "
-                + "get the attribute: " + responseName, ex);
+        DEBUG.error("VirAttributeMapper.getAttributes: Could not get the attribute: " + responseName, ex);
       }
     }
 
@@ -92,8 +98,8 @@ public class VirAttributeMapper implements AttributeMapper {
     try {
       json = new JSONObject((String) responseObtained);
     } catch (JSONException ex) {
-      OAuthUtil.debugError("OAuth.process(): JSONException: " + ex.getMessage());
-      throw new AuthLoginException("VirAccountMapper: " + ex.getMessage());
+      DEBUG.error("OAuth.process(): JSONException: " + ex.getMessage());
+      throw new AuthLoginException("VirAttributeMapper: " + ex.getMessage());
     }
 
     return json;
@@ -107,7 +113,8 @@ public class VirAttributeMapper implements AttributeMapper {
     try {
       final String virUserName = json.getString(OAUTH_LEGACY_VIR_FIELD);
 
-      try (VirDb virdb = new VirDb(virUserName, null)) {
+      try (VirDb virdb = new VirDb(DEBUG)) {
+        virdb.initialize(virUserName);
 
         attr.put(VirSession.PROP_VIRID.val(),
                 Helpers.asSet(
@@ -139,15 +146,14 @@ public class VirAttributeMapper implements AttributeMapper {
 
       } catch (AuthLoginException ex) {
         if (ErrorCode.NULL_RESULT.toString().equalsIgnoreCase(ex.getErrorCode())) {
-          OAuthUtil.debugWarning("Login without vir user. JSON=" + json.toString());
+          DEBUG.warning("Login without vir user. JSON=" + json.toString());
         }
 
         throw new AuthLoginException(ex);
       }
 
     } catch (JSONException ex) {
-      OAuthUtil.debugError("virAttributeMapper.getAttributes: Could not "
-              + "process the attribute: " + OAUTH_LEGACY_VIR_FIELD, ex);
+      DEBUG.error("VirAttributeMapper.getAttributes: Could not process the attribute: " + OAUTH_LEGACY_VIR_FIELD, ex);
 
       throw new AuthLoginException(ex);
     }
@@ -168,5 +174,4 @@ public class VirAttributeMapper implements AttributeMapper {
       attr.put(key.val(), Helpers.asSet(value));
     }
   }
-
 }
