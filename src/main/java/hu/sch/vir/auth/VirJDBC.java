@@ -20,8 +20,8 @@
  *
  * $Id: VirJDBC.java,v 1.5 2008/08/28 21:56:45 madan_ranganath Exp $
  *
- * Portions Copyrighted 2011 ForgeRock Inc Portions Copyrighted 2012 Open Source
- * Solution Technology Corporation
+ * Portions Copyrighted 2011 ForgeRock Inc
+ * Portions Copyrighted 2012 Open Source Solution Technology Corporation
  */
 package hu.sch.vir.auth;
 
@@ -171,7 +171,8 @@ public class VirJDBC extends AMLoginModule {
             throw new AuthLoginException(amAuthVirJDBC, "userNameTooLong", null);
         }
 
-        try (VirDb virDb = new VirDb(userName, debug)) {
+        try (VirDb virDb = new VirDb(debug)) {
+          virDb.initialize(userName);
           String transformedPassword = getTransformedPassword(givenPassword, virDb);
 
           // see if the passwords match

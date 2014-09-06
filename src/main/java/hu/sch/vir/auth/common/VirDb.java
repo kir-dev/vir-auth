@@ -16,7 +16,6 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
-import org.forgerock.openam.authentication.modules.oauth2.OAuthUtil;
 
 /**
  *
@@ -25,25 +24,18 @@ import org.forgerock.openam.authentication.modules.oauth2.OAuthUtil;
 public class VirDb implements AutoCloseable {
 
   private static final String JNDI_NAME = "java:comp/env/jdbc/sch";
-  private Debug debug = null;
+  private final Debug debug;
   private final Connection conn;
-  private final Map<String, Object> userRecord;
+  private Map<String, Object> userRecord;
 
-  public VirDb(String userName, Debug debug) throws AuthLoginException {
-    if (userName == null || userName.isEmpty()) {
-      throw new AuthLoginException(VirJDBC.amAuthVirJDBC,
-              ErrorCode.NULL_RESULT.toString(), null);
-    }
-
+  public VirDb(Debug debug) throws AuthLoginException {
     this.debug = debug;
     try {
       conn = getJndiConnection();
     } catch (NamingException | SQLException ex) {
-      debugMsg("Couldn't get database connection");
+      debug.warning("Couldn't get database connection", ex);
       throw new AuthLoginException(ex);
     }
-
-    userRecord = loadUser(userName);
   }
 
   public Object getUserData(VirDbColumns column) {
@@ -64,23 +56,27 @@ public class VirDb implements AutoCloseable {
     final Context initctx = new InitialContext();
     final DataSource ds = (DataSource) initctx.lookup(JNDI_NAME);
 
-    debugMsg("Datasource Acquired: " + ds.toString());
+    if (debug.messageEnabled()) {
+      debug.message("Datasource Acquired: " + ds.toString());
+    }
 
     return ds.getConnection();
   }
 
   /**
-   * Loads the user record from the database.
+   * Loads the user record from the database to initialize the object state for subsequent queries.
    *
-   * @param userName the vir login name of the user
-   * @return the record in map. The keys are columns of the database.
-   * @throws SQLException upon any database related error
-   * @throws AuthLoginException when multiple entries or no entries found
+   * @param userName The vir login name of the user.
+   * @throws AuthLoginException When multiple entries or no entries found.
    */
-  private Map<String, Object> loadUser(final String userName) throws AuthLoginException {
-
+  public void initialize(final String userName) throws AuthLoginException {
+    if (userName == null || userName.isEmpty()) {
+      throw new AuthLoginException(VirJDBC.amAuthVirJDBC, ErrorCode.NULL_RESULT.toString(), null);
+    }
     final Map<String, Object> attrs = new HashMap<>();
-    debugMsg("PreparedStatement to build: " + Queries.GET_USER_DATA_STMT);
+    if (debug.messageEnabled()) {
+      debug.message("PreparedStatement to build: " + Queries.GET_USER_DATA_STMT);
+    }
 
     try (PreparedStatement userDataStmt = conn.prepareStatement(Queries.GET_USER_DATA_STMT.val())) {
       userDataStmt.setString(1, userName.toLowerCase());
@@ -93,7 +89,7 @@ public class VirDb implements AutoCloseable {
           // do normal processing..its the first and last row
           index++;
           if (index > 1) {
-            debugMsg("Too many results. UID should be a primary key");
+            debug.error("Too many results. UID should be a primary key, userName: " + userName);
             throw new AuthLoginException(VirJDBC.amAuthVirJDBC, "multiEntry", null);
           }
 
@@ -105,15 +101,16 @@ public class VirDb implements AutoCloseable {
           }
         }
         if (index == 0) {
-          debugMsg("No results from your SQL query. UID should be valid");
+          debug.warning("No results from SQL query. UID should be valid");
           throw new AuthLoginException(VirJDBC.amAuthVirJDBC, ErrorCode.NULL_RESULT.toString(), null);
         }
       }
     } catch (SQLException ex) {
+      debug.error("SQL error while querying user record", ex);
       throw new AuthLoginException(ex);
     }
 
-    return Collections.unmodifiableMap(attrs);
+    userRecord = Collections.unmodifiableMap(attrs);
   }
 
   /**
@@ -146,11 +143,13 @@ public class VirDb implements AutoCloseable {
           final String post = rs.getString(VirDbColumns.POST_NAME.val());
           mapToEntitlement(entitlementStr, groupId, groupName, post);
 
-          debugMsg("Entitlement in group: " + groupName + ", post: " + post);
+          if (debug.messageEnabled()) {
+            debug.message("Entitlement in group: " + groupName + ", post: " + post);
+          }
         }
       }
     } catch (SQLException e) {
-      debugMsg("JDBC Exception:" + e.getMessage());
+      debug.warning("JDBC Exception while getting entitlement string: " + e.getMessage());
       throw new AuthLoginException(e);
     }
 
@@ -189,9 +188,11 @@ public class VirDb implements AutoCloseable {
       stmt.setObject(1, getUserData(VirDbColumns.VIRID), Types.BIGINT);
 
       final int updatedRows = stmt.executeUpdate();
-      debugMsg("Update lastlogin time, updated rows=" + updatedRows);
+      if (debug.messageEnabled()) {
+        debug.message("Update lastlogin time, updated rows=" + updatedRows);
+      }
     } catch (SQLException e) {
-      debugMsg("JDBC Exception:" + e.getMessage());
+      debug.warning("JDBC Exception while updating last login time: " + e.getMessage());
       throw new AuthLoginException(e);
     }
   }
@@ -199,16 +200,6 @@ public class VirDb implements AutoCloseable {
   @Deprecated
   public Map<String, Object> getUserRecord() {
     return userRecord;
-  }
-
-  private void debugMsg(final String msg) {
-    if (debug == null) {
-      OAuthUtil.debugMessage(msg);
-    } else {
-      if (debug.messageEnabled()) {
-        debug.message(msg);
-      }
-    }
   }
 
   @Override
@@ -220,5 +211,4 @@ public class VirDb implements AutoCloseable {
       }
     }
   }
-
 }
